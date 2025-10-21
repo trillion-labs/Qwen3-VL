@@ -1,37 +1,20 @@
 import re
 
-# Define placeholders for dataset paths
-CAMBRIAN_737K = {
-    "annotation_path": "PATH_TO_CAMBRIAN_737K_ANNOTATION",
+# # Define placeholders for dataset paths
+
+ANDROID_IN_THE_ZOO = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_in_the_zoo/aitz_merged_data_v2.json",
+    "data_path": "/home/work/.shared/kyuseok/format_data",
+}
+
+AGENTRECK = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/arpo_sft/non_gui_agentic_task_arpo_sft.jsonl",
     "data_path": "",
 }
 
-CAMBRIAN_737K_PACK = {
-    "annotation_path": f"PATH_TO_CAMBRIAN_737K_ANNOTATION_PACKED",
-    "data_path": f"",
-}
-
-MP_DOC = {
-    "annotation_path": "PATH_TO_MP_DOC_ANNOTATION",
-    "data_path": "PATH_TO_MP_DOC_DATA",
-}
-
-CLEVR_MC = {
-    "annotation_path": "PATH_TO_CLEVR_MC_ANNOTATION",
-    "data_path": "PATH_TO_CLEVR_MC_DATA",
-}
-
-VIDEOCHATGPT = {
-    "annotation_path": "PATH_TO_VIDEOCHATGPT_ANNOTATION",
-    "data_path": "PATH_TO_VIDEOCHATGPT_DATA",
-}
-
 data_dict = {
-    "cambrian_737k": CAMBRIAN_737K,
-    "cambrian_737k_pack": CAMBRIAN_737K_PACK,
-    "mp_doc": MP_DOC,
-    "clevr_mc": CLEVR_MC,
-    "videochatgpt": VIDEOCHATGPT,
+    "android_in_the_zoo": ANDROID_IN_THE_ZOO,
+    "agentreck": AGENTRECK,
 }
 
 
@@ -57,7 +40,7 @@ def data_list(dataset_names):
 
 
 if __name__ == "__main__":
-    dataset_names = ["cambrian_737k"]
+    dataset_names = ["android_in_the_zoo"]
     configs = data_list(dataset_names)
     for config in configs:
         print(config)

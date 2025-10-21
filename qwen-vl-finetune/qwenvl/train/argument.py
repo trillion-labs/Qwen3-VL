@@ -9,6 +9,7 @@ class ModelArguments:
     tune_mm_llm: bool = field(default=False)
     tune_mm_mlp: bool = field(default=False)
     tune_mm_vision: bool = field(default=False)
+    use_dummy_handler: bool = field(default=False, metadata={"help": "Use WithDummy model variant for handling mixed text-image data"})
 
 @dataclass
 class DataArguments:

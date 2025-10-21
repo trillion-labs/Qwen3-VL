@@ -33,6 +33,7 @@ from transformers import (
     Qwen3VLForConditionalGeneration,
     Qwen3VLMoeForConditionalGeneration
 )
+from qwenvl.model.qwen2_5_vl import Qwen2_5_VLForConditionalGenerationWithDummy
 from qwenvl.data.data_processor import make_supervised_data_module
 from qwenvl.train.argument import (
     ModelArguments,
@@ -117,12 +118,20 @@ def train(attn_implementation="flash_attention_2"):
         )
         data_args.model_type = "qwen3vl"
     elif "qwen2.5" in model_args.model_name_or_path.lower():
-        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_args.model_name_or_path,
-            cache_dir=training_args.cache_dir,
-            attn_implementation=attn_implementation,
-            dtype=(torch.bfloat16 if training_args.bf16 else None),
-        )
+        if model_args.use_dummy_handler:
+            model = Qwen2_5_VLForConditionalGenerationWithDummy.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
+        else:
+            model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
         data_args.model_type = "qwen2.5vl"
     else:
         model = Qwen2VLForConditionalGeneration.from_pretrained(
