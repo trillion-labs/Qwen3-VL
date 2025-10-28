@@ -319,7 +319,6 @@ class LazySupervisedDataset(Dataset):
             lazy_total = 0
             for data in dataset_list:
                 file_format = data["annotation_path"].split(".")[-1]
-                assert file_format == "jsonl", f"File format should be jsonl, got {file_format}"
                 num_lines, chunk_offsets = self._scan_jsonl_file(data["annotation_path"])  # returns (int, List[int])
                 sampling_rate = data.get("sampling_rate", 1.0)
                 if sampling_rate < 1.0:
