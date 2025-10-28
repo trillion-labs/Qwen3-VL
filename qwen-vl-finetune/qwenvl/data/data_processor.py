@@ -37,17 +37,35 @@ def rank0_print(*args):
 
 def read_jsonl(path):
     with open(path, "r") as f:
-        return [json.loads(line) for line in f]
+        return [json.loads(line) for line in f if check_image_aligned(json.loads(line))]
 
 def lazy_read_jsonl(path, chunk_size):
     lines = []
     with open(path, "r") as f:
         for line in f:
-            lines.append(json.loads(line))
+            item = json.loads(line)
+            if check_image_aligned(item):
+                lines.append(item)
             if len(lines) >= chunk_size:
                 yield lines
                 lines = []
 
+def check_image_aligned(item) -> bool:
+    images = item.get("image") or []
+    if isinstance(images, str):
+        images = [images]
+
+    num_images = len(images)
+    conversations = item['conversations'].copy()
+    last_user_message = ""
+    while conversations:
+        conv = conversations.pop(-1)
+        if conv['from'] == 'human':
+            last_user_message = conv['value']
+            break  
+    num_image_placeholders = last_user_message.count('<image>')
+
+    return num_images == num_image_placeholders
 
 def _make_abs_paths(base: Path, files: str) -> str:
     return f"{(base / files).resolve()}"
@@ -526,7 +544,8 @@ class LazySupervisedDataset(Dataset):
                 if not line:
                     break
                 # Decode as UTF-8 and parse JSON
-                items.append(json.loads(line.decode("utf-8")))
+                item = json.loads(line.decode("utf-8"))
+                items.append(item)
 
         # Evict if over capacity
         self._chunk_cache[key] = items
