@@ -1,4 +1,7 @@
 import json
+import hashlib
+from bisect import bisect_right
+from collections import OrderedDict
 import random
 import logging
 import re
@@ -35,6 +38,15 @@ def rank0_print(*args):
 def read_jsonl(path):
     with open(path, "r") as f:
         return [json.loads(line) for line in f]
+
+def lazy_read_jsonl(path, chunk_size):
+    lines = []
+    with open(path, "r") as f:
+        for line in f:
+            lines.append(json.loads(line))
+            if len(lines) >= chunk_size:
+                yield lines
+                lines = []
 
 
 def _make_abs_paths(base: Path, files: str) -> str:
@@ -266,33 +278,83 @@ class LazySupervisedDataset(Dataset):
         else:
             raise ValueError(f"model_type: {data_args.model_type} not supported")
 
+        self.lazy_read_jsonl = getattr(data_args, "lazy_read_jsonl", False)
+        self.prefetch_size = getattr(data_args, "prefetch_size", 1000)
+        self._max_cached_chunks = getattr(data_args, "prefetch_cache_chunks", 8)
+        self._seed = getattr(data_args, "seed", 42)
+
+        # Eagerly loaded samples (JSON files or when lazy disabled)
         list_data_dict = []
 
-        for data in dataset_list:
-            file_format = data["annotation_path"].split(".")[-1]
-            if file_format == "jsonl":
-                annotations = read_jsonl(data["annotation_path"])
-            else:
-                annotations = json.load(open(data["annotation_path"], "r"))
-            sampling_rate = data.get("sampling_rate", 1.0)
-            if sampling_rate < 1.0:
-                annotations = random.sample(
-                    annotations, int(len(annotations) * sampling_rate)
-                )
-                rank0_print(f"sampling {len(annotations)} examples from dataset {data}")
-            else:
-                rank0_print(f"dataset name: {data}")
-            for ann in annotations:
-                if isinstance(ann, list):
-                    for sub_ann in ann:
-                        sub_ann["data_path"] = data["data_path"]
+        # Lazy JSONL metadata when lazy mode is enabled
+        self._lazy_files_meta = []  # list of dicts with jsonl metadata
+        self._lazy_prefix_sums = []  # cumulative effective lengths across lazy jsonl files
+        self._chunk_cache = OrderedDict()  # (file_idx, chunk_id) -> List[dict]
+
+        if not self.lazy_read_jsonl:
+            # Original eager loading behavior
+            for data in dataset_list:
+                file_format = data["annotation_path"].split(".")[-1]
+                if file_format == "jsonl":
+                    annotations = read_jsonl(data["annotation_path"])
                 else:
-                    ann["data_path"] = data["data_path"]
-            list_data_dict += annotations
+                    annotations = json.load(open(data["annotation_path"], "r"))
+                sampling_rate = data.get("sampling_rate", 1.0)
+                if sampling_rate < 1.0:
+                    annotations = random.sample(
+                        annotations, int(len(annotations) * sampling_rate)
+                    )
+                    rank0_print(f"sampling {len(annotations)} examples from dataset {data}")
+                else:
+                    rank0_print(f"dataset name: {data}")
+                for ann in annotations:
+                    if isinstance(ann, list):
+                        for sub_ann in ann:
+                            sub_ann["data_path"] = data["data_path"]
+                    else:
+                        ann["data_path"] = data["data_path"]
+                list_data_dict += annotations
+        else:
+            # Lazy mode: do not load jsonl contents into memory. Build fast indexes instead.
+            lazy_total = 0
+            for data in dataset_list:
+                file_format = data["annotation_path"].split(".")[-1]
+                assert file_format == "jsonl", f"File format should be jsonl, got {file_format}"
+                num_lines, chunk_offsets = self._scan_jsonl_file(data["annotation_path"])  # returns (int, List[int])
+                sampling_rate = data.get("sampling_rate", 1.0)
+                if sampling_rate < 1.0:
+                    # Pre-sample line indices for this file (deterministic across ranks)
+                    sample_count = max(1, int(num_lines * sampling_rate))
+                    stable = int(hashlib.md5(data["annotation_path"].encode("utf-8")).hexdigest(), 16)
+                    rng = random.Random(self._seed ^ stable)
+                    sampled_indices = sorted(rng.sample(range(num_lines), sample_count))
+                    effective_len = len(sampled_indices)
+                else:
+                    sampled_indices = None
+                    effective_len = num_lines
+
+                self._lazy_files_meta.append(
+                    {
+                        "annotation_path": data["annotation_path"],
+                        "data_path": data["data_path"],
+                        "num_lines": num_lines,
+                        "chunk_offsets": chunk_offsets,
+                        "sampling_rate": sampling_rate,
+                        "sampled_indices": sampled_indices,
+                    }
+                )
+                lazy_total += effective_len
+                self._lazy_prefix_sums.append(lazy_total)
+                rank0_print(
+                    f"[lazy jsonl] indexed {effective_len}/{num_lines} lines, chunks={len(chunk_offsets)} for {data['annotation_path']}"
+                )
+                
+
 
         rank0_print(f"Total training samples: {len(list_data_dict)}")
 
-        random.shuffle(list_data_dict)  # Randomly shuffle the data for training
+        # Deterministic shuffle for eager-loaded portion to keep datasets identical across ranks
+        random.Random(self._seed).shuffle(list_data_dict)
 
         rank0_print("Formatting inputs...Skip in lazy mode")
         processor = update_processor_pixels(processor, data_args)
@@ -308,35 +370,41 @@ class LazySupervisedDataset(Dataset):
             self.item_fn = self._get_item
 
     def __len__(self):
-        return len(self.list_data_dict)
+        if not self.lazy_read_jsonl:
+            return len(self.list_data_dict)
+        lazy_len = self._lazy_prefix_sums[-1] if len(self._lazy_prefix_sums) > 0 else 0
+        return len(self.list_data_dict) + lazy_len
 
     @property
     def lengths(self):
+        # In lazy mode, computing exact lengths would force reading the entire JSONL.
+        # Return a placeholder list to avoid eager loading.
+        if self.lazy_read_jsonl:
+            return [1] * len(self)
         length_list = []
         for sample in self.list_data_dict:
             img_tokens = 128 if "image" in sample else 0
             length_list.append(
-                sum(len(conv["value"].split()) for conv in sample["conversations"])
-                + img_tokens
+                sum(len(conv["value"].split()) for conv in sample["conversations"]) + img_tokens
             )
         return length_list
 
     @property
     def modality_lengths(self):
+        if self.lazy_read_jsonl:
+            return [1] * len(self)
         length_list = []
         for sample in self.list_data_dict:
-            cur_len = sum(
-                len(conv["value"].split()) for conv in sample["conversations"]
-            )
-            cur_len = (
-                cur_len if ("image" in sample) or ("video" in sample) else -cur_len
-            )
+            cur_len = sum(len(conv["value"].split()) for conv in sample["conversations"])
+            cur_len = cur_len if ("image" in sample) or ("video" in sample) else -cur_len
             length_list.append(cur_len)
         return length_list
 
     @property
     def pre_calculated_length(self):
-        if "num_tokens" in self.list_data_dict[0]:
+        if self.lazy_read_jsonl:
+            return np.array([1] * len(self))
+        if len(self.list_data_dict) > 0 and "num_tokens" in self.list_data_dict[0]:
             length_list = [sample["num_tokens"] for sample in self.list_data_dict]
             return np.array(length_list)
         else:
@@ -350,9 +418,7 @@ class LazySupervisedDataset(Dataset):
         # try the current sample first
         for attempt_idx in range(num_base_retries):
             try:
-                sources = self.list_data_dict[i]
-                if isinstance(sources, dict):
-                    sources = [sources]
+                sources = self._get_sources(i)
                 sample = self.item_fn(sources)
                 return sample
             except Exception as e:
@@ -363,10 +429,8 @@ class LazySupervisedDataset(Dataset):
         # try other samples, in case it is file corruption issue
         for attempt_idx in range(num_base_retries):
             try:
-                next_index = min(i + 1, len(self.list_data_dict) - 1)
-                sources = self.list_data_dict[next_index]
-                if isinstance(sources, dict):
-                    sources = [sources]
+                next_index = min(i + 1, len(self) - 1)
+                sources = self._get_sources(next_index)
 
                 sample = self.item_fn(sources)
                 return sample
@@ -379,13 +443,97 @@ class LazySupervisedDataset(Dataset):
                 pass
 
         try:
-            sources = self.list_data_dict[i]
-            if isinstance(sources, dict):
-                sources = [sources]
+            sources = self._get_sources(i)
             sample = self.item_fn(sources)
             return sample
         except Exception as e:
             raise e
+
+    def _get_sources(self, global_index):
+        """Resolve a global index to the corresponding sample(s) in either the eager list or lazy JSONL.
+
+        Returns a list of one dict or a list of dicts when the JSONL line represents a packed group.
+        """
+        eager_len = len(self.list_data_dict)
+        if global_index < eager_len:
+            sources = self.list_data_dict[global_index]
+            if isinstance(sources, dict):
+                return [sources]
+            return sources
+
+        # Lazy JSONL domain
+        lazy_idx = global_index - eager_len
+        if len(self._lazy_prefix_sums) == 0:
+            raise IndexError("Index out of range for empty dataset")
+        file_idx = bisect_right(self._lazy_prefix_sums, lazy_idx)
+        prev_sum = self._lazy_prefix_sums[file_idx - 1] if file_idx > 0 else 0
+        local_idx = lazy_idx - prev_sum
+
+        file_meta = self._lazy_files_meta[file_idx]
+        # Map local index through sampling if enabled
+        if file_meta["sampled_indices"] is not None:
+            line_idx = file_meta["sampled_indices"][local_idx]
+        else:
+            line_idx = local_idx
+
+        chunk_id = line_idx // self.prefetch_size
+        chunk = self._get_jsonl_chunk(file_idx, chunk_id)
+        obj = chunk[line_idx % self.prefetch_size]
+
+        # Attach data_path consistently with eager path
+        if isinstance(obj, list):
+            for sub in obj:
+                sub["data_path"] = file_meta["data_path"]
+        else:
+            obj["data_path"] = file_meta["data_path"]
+
+        if isinstance(obj, dict):
+            return [obj]
+        return obj
+
+    def _scan_jsonl_file(self, path):
+        """Scan a JSONL file in binary mode to count lines and record byte offsets at chunk starts.
+
+        Returns (num_lines, chunk_offsets) where chunk_offsets[i] is the byte offset of the first line in chunk i.
+        """
+        chunk_offsets = []
+        num_lines = 0
+        with open(path, "rb") as f:
+            while True:
+                start_pos = f.tell()
+                line = f.readline()
+                if not line:
+                    break
+                if num_lines % self.prefetch_size == 0:
+                    chunk_offsets.append(start_pos)
+                num_lines += 1
+        return num_lines, chunk_offsets
+
+    def _get_jsonl_chunk(self, file_idx, chunk_id):
+        """Load and cache a chunk of JSONL lines as parsed JSON objects."""
+        key = (file_idx, chunk_id)
+        if key in self._chunk_cache:
+            # Move to end to mark as recently used
+            self._chunk_cache.move_to_end(key)
+            return self._chunk_cache[key]
+
+        file_meta = self._lazy_files_meta[file_idx]
+        start_offset = file_meta["chunk_offsets"][chunk_id]
+        items = []
+        with open(file_meta["annotation_path"], "rb") as f:
+            f.seek(start_offset)
+            for _ in range(self.prefetch_size):
+                line = f.readline()
+                if not line:
+                    break
+                # Decode as UTF-8 and parse JSON
+                items.append(json.loads(line.decode("utf-8")))
+
+        # Evict if over capacity
+        self._chunk_cache[key] = items
+        if len(self._chunk_cache) > self._max_cached_chunks:
+            self._chunk_cache.popitem(last=False)
+        return items
 
     def _get_item(self, sources) -> Dict[str, torch.Tensor]:
         data_dict = preprocess_qwen_visual(
