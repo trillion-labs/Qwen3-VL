@@ -27,6 +27,7 @@ class DataArguments:
     lazy_read_jsonl: bool = field(default=False)
     prefetch_size: int = field(default=1000)
     prefetch_cache_chunks: int = field(default=8)
+    truncate_to_max_length: bool = field(default=True)
 
 
 @dataclass
