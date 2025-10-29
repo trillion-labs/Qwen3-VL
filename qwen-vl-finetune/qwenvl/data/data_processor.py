@@ -64,13 +64,11 @@ def check_image_aligned(item) -> bool:
 
     num_images = len(images)
     conversations = item['conversations'].copy()
-    last_user_message = ""
-    while conversations:
-        conv = conversations.pop(-1)
+    num_image_placeholders = 0
+    for conv in conversations:
         if conv['from'] == 'human':
-            last_user_message = conv['value']
-            break  
-    num_image_placeholders = last_user_message.count('<image>')
+            user_message = conv['value']
+            num_image_placeholders += user_message.count('<image>')
 
     return num_images == num_image_placeholders
 
@@ -560,8 +558,42 @@ class LazySupervisedDataset(Dataset):
             line_idx = local_idx
 
         chunk_id = line_idx // self.prefetch_size
-        chunk = self._get_jsonl_chunk(file_idx, chunk_id)
-        obj = chunk[line_idx % self.prefetch_size]
+        chunk_items, chunk_line_indices = self._get_jsonl_chunk(file_idx, chunk_id)
+
+        # Try to find exact line within this chunk (accounting for filtered lines)
+        try:
+            pos_in_chunk = chunk_line_indices.index(line_idx)
+            obj = chunk_items[pos_in_chunk]
+        except ValueError:
+            # The desired line was filtered out in this chunk. Advance to the next available aligned line.
+            # Respect sampling if present by advancing within sampled_indices; otherwise advance line by line.
+            obj = None
+            if file_meta["sampled_indices"] is not None:
+                si = file_meta["sampled_indices"]
+                j = local_idx
+                while j < len(si) and obj is None:
+                    cand_line = si[j]
+                    cand_chunk_id = cand_line // self.prefetch_size
+                    cand_items, cand_idx = self._get_jsonl_chunk(file_idx, cand_chunk_id)
+                    try:
+                        cand_pos = cand_idx.index(cand_line)
+                        obj = cand_items[cand_pos]
+                    except ValueError:
+                        j += 1
+            else:
+                cand_line = line_idx
+                num_lines = file_meta.get("num_lines", 0)
+                while cand_line < num_lines and obj is None:
+                    cand_chunk_id = cand_line // self.prefetch_size
+                    cand_items, cand_idx = self._get_jsonl_chunk(file_idx, cand_chunk_id)
+                    try:
+                        cand_pos = cand_idx.index(cand_line)
+                        obj = cand_items[cand_pos]
+                    except ValueError:
+                        cand_line += 1
+
+            if obj is None:
+                raise IndexError("No aligned item found for requested index")
 
         # Attach data_path consistently with eager path
         if isinstance(obj, list):
@@ -599,7 +631,7 @@ class LazySupervisedDataset(Dataset):
         return num_lines, chunk_offsets
 
     def _get_jsonl_chunk(self, file_idx, chunk_id):
-        """Load and cache a chunk of JSONL lines as parsed JSON objects."""
+        """Load and cache a chunk of JSONL lines as parsed JSON objects along with their original line indices."""
         key = (file_idx, chunk_id)
         if key in self._chunk_cache:
             # Move to end to mark as recently used
@@ -609,21 +641,29 @@ class LazySupervisedDataset(Dataset):
         file_meta = self._lazy_files_meta[file_idx]
         start_offset = file_meta["chunk_offsets"][chunk_id]
         items = []
+        line_indices = []
         with open(file_meta["annotation_path"], "rb") as f:
             f.seek(start_offset)
+            local_line_idx = 0
             for _ in range(self.prefetch_size):
                 line = f.readline()
                 if not line:
                     break
                 # Decode as UTF-8 and parse JSON
                 item = json.loads(line.decode("utf-8"))
-                items.append(item)
+                if check_image_aligned(item):
+                    items.append(item)
+                    # Record the original (global within-file) line index for this kept item
+                    line_indices.append(chunk_id * self.prefetch_size + local_line_idx)
+                else:
+                    print(f"Image not aligned: {file_meta['annotation_path']}")
+                local_line_idx += 1
 
         # Evict if over capacity
-        self._chunk_cache[key] = items
+        self._chunk_cache[key] = (items, line_indices)
         if len(self._chunk_cache) > self._max_cached_chunks:
             self._chunk_cache.popitem(last=False)
-        return items
+        return self._chunk_cache[key]
 
     def _get_item(self, sources) -> Dict[str, torch.Tensor]:
         data_dict = preprocess_qwen_visual(
