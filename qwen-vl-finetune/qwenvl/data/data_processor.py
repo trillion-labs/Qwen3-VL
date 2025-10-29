@@ -1,4 +1,8 @@
 import json
+import hashlib
+import os
+from bisect import bisect_right
+from collections import OrderedDict
 import random
 import logging
 import re
@@ -17,6 +21,10 @@ import transformers
 
 from . import data_list
 from .rope2d import get_rope_index_25, get_rope_index_2, get_rope_index_3
+try:
+    import torch.distributed as dist
+except Exception:
+    dist = None
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = 151655
@@ -24,7 +32,7 @@ VIDEO_TOKEN_INDEX = 151656
 DEFAULT_IMAGE_TOKEN = "<image>"
 DEFAULT_VIDEO_TOKEN = "<video>"
 
-local_rank = None
+local_rank = int(os.getenv("RANK", "0"))
 
 
 def rank0_print(*args):
@@ -34,8 +42,35 @@ def rank0_print(*args):
 
 def read_jsonl(path):
     with open(path, "r") as f:
-        return [json.loads(line) for line in f]
+        return [json.loads(line) for line in f if check_image_aligned(json.loads(line))]
 
+def lazy_read_jsonl(path, chunk_size):
+    lines = []
+    with open(path, "r") as f:
+        for line in f:
+            item = json.loads(line)
+            if check_image_aligned(item):
+                lines.append(item)
+            else:
+                print(f"Skipping image not aligned: {item}")
+            if len(lines) >= chunk_size:
+                yield lines
+                lines = []
+
+def check_image_aligned(item) -> bool:
+    images = item.get("image") or []
+    if isinstance(images, str):
+        images = [images]
+
+    num_images = len(images)
+    conversations = item['conversations'].copy()
+    num_image_placeholders = 0
+    for conv in conversations:
+        if conv['from'] == 'human':
+            user_message = conv['value']
+            num_image_placeholders += user_message.count('<image>')
+
+    return num_images == num_image_placeholders
 
 def _make_abs_paths(base: Path, files: str) -> str:
     return f"{(base / files).resolve()}"
@@ -247,7 +282,12 @@ class LazySupervisedDataset(Dataset):
     def __init__(self, processor, data_args):
         super(LazySupervisedDataset, self).__init__()
 
+        print("=" * 80)
+        print("INITIALIZING LazySupervisedDataset")
+        print("=" * 80)
+
         dataset = data_args.dataset_use.split(",")
+        print(f"Dataset names from args: {dataset}")
         dataset_list = data_list(dataset)
         rank0_print(f"Loading datasets: {dataset_list}")
         self.video_max_total_pixels = getattr(
@@ -266,36 +306,134 @@ class LazySupervisedDataset(Dataset):
         else:
             raise ValueError(f"model_type: {data_args.model_type} not supported")
 
+        self.lazy_read_jsonl = getattr(data_args, "lazy_read_jsonl", False)
+        self.prefetch_size = getattr(data_args, "prefetch_size", 1000)
+        self._max_cached_chunks = getattr(data_args, "prefetch_cache_chunks", 8)
+        self._seed = getattr(data_args, "seed", 42)
+        print(f"Lazy loading mode: {self.lazy_read_jsonl}")
+        print(f"Prefetch size: {self.prefetch_size}")
+        print(f"Max cached chunks: {self._max_cached_chunks}")
+
+        # Eagerly loaded samples (JSON files or when lazy disabled)
         list_data_dict = []
 
-        for data in dataset_list:
-            file_format = data["annotation_path"].split(".")[-1]
-            if file_format == "jsonl":
-                annotations = read_jsonl(data["annotation_path"])
-            else:
-                annotations = json.load(open(data["annotation_path"], "r"))
-            sampling_rate = data.get("sampling_rate", 1.0)
-            if sampling_rate < 1.0:
-                annotations = random.sample(
-                    annotations, int(len(annotations) * sampling_rate)
-                )
-                rank0_print(f"sampling {len(annotations)} examples from dataset {data}")
-            else:
-                rank0_print(f"dataset name: {data}")
-            for ann in annotations:
-                if isinstance(ann, list):
-                    for sub_ann in ann:
-                        sub_ann["data_path"] = data["data_path"]
+        # Lazy JSONL metadata when lazy mode is enabled
+        self._lazy_files_meta = []  # list of dicts with jsonl metadata
+        self._lazy_prefix_sums = []  # cumulative effective lengths across lazy jsonl files
+        self._chunk_cache = OrderedDict()  # (file_idx, chunk_id) -> List[dict]
+
+        if not self.lazy_read_jsonl:
+            # Original eager loading behavior
+            print("Using EAGER loading mode")
+            for idx, data in enumerate(dataset_list):
+                print(f"[{idx+1}/{len(dataset_list)}] Loading dataset: {data['annotation_path']}")
+                file_format = data["annotation_path"].split(".")[-1]
+                if file_format == "jsonl":
+                    print(f"  Reading JSONL file...")
+                    annotations = read_jsonl(data["annotation_path"])
                 else:
-                    ann["data_path"] = data["data_path"]
-            list_data_dict += annotations
+                    print(f"  Reading JSON file...")
+                    annotations = json.load(open(data["annotation_path"], "r"))
+                print(f"  Loaded {len(annotations)} annotations")
+                sampling_rate = data.get("sampling_rate", 1.0)
+                if sampling_rate < 1.0:
+                    annotations = random.sample(
+                        annotations, int(len(annotations) * sampling_rate)
+                    )
+                    rank0_print(f"sampling {len(annotations)} examples from dataset {data}")
+                else:
+                    rank0_print(f"dataset name: {data}")
+                print(f"  Setting data_path for annotations...")
+                for ann in annotations:
+                    if isinstance(ann, list):
+                        for sub_ann in ann:
+                            sub_ann["data_path"] = data["data_path"]
+                    else:
+                        ann["data_path"] = data["data_path"]
+                list_data_dict += annotations
+                print(f"  Total annotations so far: {len(list_data_dict)}")
+        else:
+            # Lazy mode: do not load jsonl contents into memory. Build fast indexes instead.
+            print("Using LAZY loading mode")
+            is_dist = (dist is not None) and dist.is_available() and dist.is_initialized()
+            rank = dist.get_rank() if is_dist else 0
+            world_size = dist.get_world_size() if is_dist else 1
+
+            # keep rank0_print consistent
+            try:
+                global local_rank
+                local_rank = rank
+            except Exception:
+                pass
+
+            tmp_lazy_files_meta = []
+            tmp_lazy_prefix_sums = []
+            lazy_total = 0
+            for idx, data in enumerate(dataset_list):
+                file_format = data["annotation_path"].split(".")[-1]
+                if file_format != "jsonl":
+                    # For JSON files, keep eager behavior even in lazy mode (already handled above if needed)
+                    continue
+
+                if rank == 0:
+                    print(f"[{idx+1}/{len(dataset_list)}] Indexing dataset: {data['annotation_path']}")
+                    print(f"  Scanning JSONL file...")
+                    num_lines, chunk_offsets = self._scan_jsonl_file(data["annotation_path"])  # returns (int, List[int])
+                    print(f"  Found {num_lines} lines, {len(chunk_offsets)} chunks")
+                    sampling_rate = data.get("sampling_rate", 1.0)
+                    if sampling_rate < 1.0:
+                        # Pre-sample line indices for this file (deterministic across ranks)
+                        sample_count = max(1, int(num_lines * sampling_rate))
+                        stable = int(hashlib.md5(data["annotation_path"].encode("utf-8")).hexdigest(), 16)
+                        rng = random.Random(self._seed ^ stable)
+                        sampled_indices = sorted(rng.sample(range(num_lines), sample_count))
+                        effective_len = len(sampled_indices)
+                    else:
+                        sampled_indices = None
+                        effective_len = num_lines
+
+                    tmp_lazy_files_meta.append(
+                        {
+                            "annotation_path": data["annotation_path"],
+                            "data_path": data["data_path"],
+                            "num_lines": num_lines,
+                            "chunk_offsets": chunk_offsets,
+                            "sampling_rate": sampling_rate,
+                            "sampled_indices": sampled_indices,
+                        }
+                    )
+                    lazy_total += effective_len
+                    tmp_lazy_prefix_sums.append(lazy_total)
+                    rank0_print(
+                        f"[lazy jsonl] indexed {effective_len}/{num_lines} lines, chunks={len(chunk_offsets)} for {data['annotation_path']}"
+                    )
+
+            # Synchronize and broadcast the computed indices to all ranks
+            if is_dist:
+                if rank == 0:
+                    payload = [tmp_lazy_files_meta, tmp_lazy_prefix_sums]
+                else:
+                    payload = [None, None]
+                dist.broadcast_object_list(payload, src=0)
+                self._lazy_files_meta = payload[0] if payload[0] is not None else []
+                self._lazy_prefix_sums = payload[1] if payload[1] is not None else []
+            else:
+                self._lazy_files_meta = tmp_lazy_files_meta
+                self._lazy_prefix_sums = tmp_lazy_prefix_sums
+
 
         rank0_print(f"Total training samples: {len(list_data_dict)}")
 
-        random.shuffle(list_data_dict)  # Randomly shuffle the data for training
+        # Deterministic shuffle for eager-loaded portion to keep datasets identical across ranks
+        if len(list_data_dict) > 0:
+            print(f"Shuffling {len(list_data_dict)} eager-loaded samples...")
+            random.Random(self._seed).shuffle(list_data_dict)
+            print("Shuffle complete")
 
         rank0_print("Formatting inputs...Skip in lazy mode")
+        print("Updating processor pixels...")
         processor = update_processor_pixels(processor, data_args)
+        print("Processor update complete")
         self.processor = processor
         self.tokenizer = processor.tokenizer
         self.data_args = data_args
@@ -303,40 +441,51 @@ class LazySupervisedDataset(Dataset):
         self.list_data_dict = list_data_dict
 
         if data_args.data_packing:
+            print("Using PACKED item mode")
             self.item_fn = self._get_packed_item
         else:
+            print("Using STANDARD item mode")
             self.item_fn = self._get_item
 
+        print(f"Dataset initialized with {len(self)} total samples")
+        print("=" * 80)
+
     def __len__(self):
-        return len(self.list_data_dict)
+        if not self.lazy_read_jsonl:
+            return len(self.list_data_dict)
+        lazy_len = self._lazy_prefix_sums[-1] if len(self._lazy_prefix_sums) > 0 else 0
+        return len(self.list_data_dict) + lazy_len
 
     @property
     def lengths(self):
+        # In lazy mode, computing exact lengths would force reading the entire JSONL.
+        # Return a placeholder list to avoid eager loading.
+        if self.lazy_read_jsonl:
+            return [1] * len(self)
         length_list = []
         for sample in self.list_data_dict:
             img_tokens = 128 if "image" in sample else 0
             length_list.append(
-                sum(len(conv["value"].split()) for conv in sample["conversations"])
-                + img_tokens
+                sum(len(conv["value"].split()) for conv in sample["conversations"]) + img_tokens
             )
         return length_list
 
     @property
     def modality_lengths(self):
+        if self.lazy_read_jsonl:
+            return [1] * len(self)
         length_list = []
         for sample in self.list_data_dict:
-            cur_len = sum(
-                len(conv["value"].split()) for conv in sample["conversations"]
-            )
-            cur_len = (
-                cur_len if ("image" in sample) or ("video" in sample) else -cur_len
-            )
+            cur_len = sum(len(conv["value"].split()) for conv in sample["conversations"])
+            cur_len = cur_len if ("image" in sample) or ("video" in sample) else -cur_len
             length_list.append(cur_len)
         return length_list
 
     @property
     def pre_calculated_length(self):
-        if "num_tokens" in self.list_data_dict[0]:
+        if self.lazy_read_jsonl:
+            return np.array([1] * len(self))
+        if len(self.list_data_dict) > 0 and "num_tokens" in self.list_data_dict[0]:
             length_list = [sample["num_tokens"] for sample in self.list_data_dict]
             return np.array(length_list)
         else:
@@ -350,9 +499,7 @@ class LazySupervisedDataset(Dataset):
         # try the current sample first
         for attempt_idx in range(num_base_retries):
             try:
-                sources = self.list_data_dict[i]
-                if isinstance(sources, dict):
-                    sources = [sources]
+                sources = self._get_sources(i)
                 sample = self.item_fn(sources)
                 return sample
             except Exception as e:
@@ -363,10 +510,8 @@ class LazySupervisedDataset(Dataset):
         # try other samples, in case it is file corruption issue
         for attempt_idx in range(num_base_retries):
             try:
-                next_index = min(i + 1, len(self.list_data_dict) - 1)
-                sources = self.list_data_dict[next_index]
-                if isinstance(sources, dict):
-                    sources = [sources]
+                next_index = min(i + 1, len(self) - 1)
+                sources = self._get_sources(next_index)
 
                 sample = self.item_fn(sources)
                 return sample
@@ -379,13 +524,146 @@ class LazySupervisedDataset(Dataset):
                 pass
 
         try:
-            sources = self.list_data_dict[i]
-            if isinstance(sources, dict):
-                sources = [sources]
+            sources = self._get_sources(i)
             sample = self.item_fn(sources)
             return sample
         except Exception as e:
             raise e
+
+    def _get_sources(self, global_index):
+        """Resolve a global index to the corresponding sample(s) in either the eager list or lazy JSONL.
+
+        Returns a list of one dict or a list of dicts when the JSONL line represents a packed group.
+        """
+        eager_len = len(self.list_data_dict)
+        if global_index < eager_len:
+            sources = self.list_data_dict[global_index]
+            if isinstance(sources, dict):
+                return [sources]
+            return sources
+
+        # Lazy JSONL domain
+        lazy_idx = global_index - eager_len
+        if len(self._lazy_prefix_sums) == 0:
+            raise IndexError("Index out of range for empty dataset")
+        file_idx = bisect_right(self._lazy_prefix_sums, lazy_idx)
+        prev_sum = self._lazy_prefix_sums[file_idx - 1] if file_idx > 0 else 0
+        local_idx = lazy_idx - prev_sum
+
+        file_meta = self._lazy_files_meta[file_idx]
+        # Map local index through sampling if enabled
+        if file_meta["sampled_indices"] is not None:
+            line_idx = file_meta["sampled_indices"][local_idx]
+        else:
+            line_idx = local_idx
+
+        chunk_id = line_idx // self.prefetch_size
+        chunk_items, chunk_line_indices = self._get_jsonl_chunk(file_idx, chunk_id)
+
+        # Try to find exact line within this chunk (accounting for filtered lines)
+        try:
+            pos_in_chunk = chunk_line_indices.index(line_idx)
+            obj = chunk_items[pos_in_chunk]
+        except ValueError:
+            # The desired line was filtered out in this chunk. Advance to the next available aligned line.
+            # Respect sampling if present by advancing within sampled_indices; otherwise advance line by line.
+            obj = None
+            if file_meta["sampled_indices"] is not None:
+                si = file_meta["sampled_indices"]
+                j = local_idx
+                while j < len(si) and obj is None:
+                    cand_line = si[j]
+                    cand_chunk_id = cand_line // self.prefetch_size
+                    cand_items, cand_idx = self._get_jsonl_chunk(file_idx, cand_chunk_id)
+                    try:
+                        cand_pos = cand_idx.index(cand_line)
+                        obj = cand_items[cand_pos]
+                    except ValueError:
+                        j += 1
+            else:
+                cand_line = line_idx
+                num_lines = file_meta.get("num_lines", 0)
+                while cand_line < num_lines and obj is None:
+                    cand_chunk_id = cand_line // self.prefetch_size
+                    cand_items, cand_idx = self._get_jsonl_chunk(file_idx, cand_chunk_id)
+                    try:
+                        cand_pos = cand_idx.index(cand_line)
+                        obj = cand_items[cand_pos]
+                    except ValueError:
+                        cand_line += 1
+
+            if obj is None:
+                raise IndexError("No aligned item found for requested index")
+
+        # Attach data_path consistently with eager path
+        if isinstance(obj, list):
+            for sub in obj:
+                sub["data_path"] = file_meta["data_path"]
+        else:
+            obj["data_path"] = file_meta["data_path"]
+
+        if isinstance(obj, dict):
+            return [obj]
+        return obj
+
+    def _scan_jsonl_file(self, path):
+        """Scan a JSONL file in binary mode to count lines and record byte offsets at chunk starts.
+
+        Returns (num_lines, chunk_offsets) where chunk_offsets[i] is the byte offset of the first line in chunk i.
+        """
+        chunk_offsets = []
+        num_lines = 0
+        last_print = 0
+        print_interval = 100000  # Print every 100k lines
+        with open(path, "rb") as f:
+            while True:
+                start_pos = f.tell()
+                line = f.readline()
+                if not line:
+                    break
+                if num_lines % self.prefetch_size == 0:
+                    chunk_offsets.append(start_pos)
+                num_lines += 1
+                # Print progress every print_interval lines
+                if num_lines - last_print >= print_interval:
+                    print(f"    Scanned {num_lines} lines...")
+                    last_print = num_lines
+        return num_lines, chunk_offsets
+
+    def _get_jsonl_chunk(self, file_idx, chunk_id):
+        """Load and cache a chunk of JSONL lines as parsed JSON objects along with their original line indices."""
+        key = (file_idx, chunk_id)
+        if key in self._chunk_cache:
+            # Move to end to mark as recently used
+            self._chunk_cache.move_to_end(key)
+            return self._chunk_cache[key]
+
+        file_meta = self._lazy_files_meta[file_idx]
+        start_offset = file_meta["chunk_offsets"][chunk_id]
+        items = []
+        line_indices = []
+        with open(file_meta["annotation_path"], "rb") as f:
+            f.seek(start_offset)
+            local_line_idx = 0
+            for _ in range(self.prefetch_size):
+                line = f.readline()
+                if not line:
+                    break
+                # Decode as UTF-8 and parse JSON
+                item = json.loads(line.decode("utf-8"))
+                if check_image_aligned(item):
+                    items.append(item)
+                    # Record the original (global within-file) line index for this kept item
+                    line_indices.append(chunk_id * self.prefetch_size + local_line_idx)
+                else:
+                    print(f"Image not aligned: {file_meta['annotation_path']}")
+                local_line_idx += 1
+
+        # Evict if over capacity
+        self._chunk_cache[key] = (items, line_indices)
+        if len(self._chunk_cache) > self._max_cached_chunks:
+            self._chunk_cache.popitem(last=False)
+        return self._chunk_cache[key]
 
     def _get_item(self, sources) -> Dict[str, torch.Tensor]:
         data_dict = preprocess_qwen_visual(
@@ -607,6 +885,8 @@ class FlattenedDataCollatorForSupervisedDataset(DataCollatorForSupervisedDataset
     """Collate examples into packed sequence with multi-modal support."""
 
     tokenizer: transformers.PreTrainedTokenizer
+    truncate_to_max_length: bool = True
+    model_max_length: int = None
 
     def __call__(self, instances: Sequence[Dict]) -> Dict[str, torch.Tensor]:
         input_ids, labels, position_ids, attention_mask = tuple(
@@ -628,30 +908,86 @@ class FlattenedDataCollatorForSupervisedDataset(DataCollatorForSupervisedDataset
         labels = torch.cat(labels, dim=1)
         position_ids = torch.cat(position_ids, dim=2)
 
+        # Truncate to model_max_length if enabled
+        num_sequences_to_keep = len(instances)  # Track how many sequences we keep
+
+        # check number of image tokens for each instance
+        
+        for instance in instances:
+            # print("input ids size: ", instance["input_ids"].size())
+            num_image_tokens = (instance["input_ids"] == IMAGE_TOKEN_INDEX).sum().item()
+            # print(f"Number of image tokens for instance: {num_image_tokens}")
+        
+        if self.truncate_to_max_length:
+            # Use model_max_length from args, fallback to tokenizer's if not provided
+            max_length = self.model_max_length if self.model_max_length is not None else self.tokenizer.model_max_length
+            if input_ids.shape[1] > max_length:
+                print(f"Truncating from {input_ids.shape[1]} to {max_length}")
+                mask = cumsum_seq_lens <= max_length
+                cumsum_seq_lens_filtered = cumsum_seq_lens[mask]
+
+                # Check if we have at least 2 elements (start + at least one end boundary)
+                if len(cumsum_seq_lens_filtered) < 2:
+                    print(f"WARNING: First sequence length ({cumsum_seq_lens[1].item() if len(cumsum_seq_lens) > 1 else 'N/A'}) exceeds max_length ({max_length}). Truncating first sequence to max_length.")
+                    # Truncate the first sequence to max_length
+                    last_index = max_length
+                    cumsum_seq_lens = torch.tensor([0, max_length], dtype=torch.int32)  # [start, end]
+                    num_sequences_to_keep = 1
+                else:
+                    print("Truncating sequence that has more than 2 cumsum_seq_lens_filtered")
+                    # Keep complete sequences that fit within max_length
+                    # cumsum_seq_lens_filtered has boundaries up to and including those <= max_length
+                    # The last element is a boundary that's <= max_length, so we use it
+                    last_index = cumsum_seq_lens_filtered[-1].item()  # Get the last boundary value
+
+                    # For packed sequences, we need to keep: [0, end_seq1, end_seq2, ..., end_last_complete_seq]
+                    # But NOT the boundary that would start the next (truncated) sequence
+                    # cumsum_seq_lens_filtered already contains only boundaries <= max_length
+                    # So we keep all of them
+                    cumsum_seq_lens = cumsum_seq_lens_filtered
+
+                    # Calculate how many sequences we're keeping
+                    # Number of sequences = number of boundaries - 1 (excluding the starting 0)
+                    num_sequences_to_keep = len(cumsum_seq_lens) - 1
+
+                print(f"Keeping {num_sequences_to_keep} out of {len(instances)} sequences, truncating to {last_index} tokens")
+
+                # Only truncate if we're keeping at least one sequence
+                # Truncate image/video counts to match kept sequences
+                input_ids = input_ids[:, :last_index]
+                labels = labels[:, :last_index]
+                position_ids = position_ids[:, :, :last_index]
+
         batch = dict(
             input_ids=input_ids,
             labels=labels,
             attention_mask=cumsum_seq_lens,
             position_ids=position_ids,
         )
+
+        # Only include images/videos from sequences we're keeping
+        instances_to_use = instances[:num_sequences_to_keep]
+
         images = list(
             instance["pixel_values"]
-            for instance in instances
+            for instance in instances_to_use
             if "pixel_values" in instance
         )
         videos = list(
             instance["pixel_values_videos"]
-            for instance in instances
+            for instance in instances_to_use
             if "pixel_values_videos" in instance
         )
+
         if len(images) != 0:
             concat_images = torch.cat([image for image in images], dim=0)
             grid_thw = [
                 instance["image_grid_thw"]
-                for instance in instances
+                for instance in instances_to_use
                 if "image_grid_thw" in instance
             ]
             grid_thw = torch.cat(grid_thw, dim=0)
+
         else:
             concat_images = None
             grid_thw = None
@@ -660,10 +996,11 @@ class FlattenedDataCollatorForSupervisedDataset(DataCollatorForSupervisedDataset
             concat_videos = torch.cat([video for video in videos], dim=0)
             video_grid_thw = [
                 instance["video_grid_thw"]
-                for instance in instances
+                for instance in instances_to_use
                 if "video_grid_thw" in instance
             ]
             video_grid_thw = torch.cat(video_grid_thw, dim=0)
+
         else:
             concat_videos = None
             video_grid_thw = None
@@ -676,15 +1013,22 @@ class FlattenedDataCollatorForSupervisedDataset(DataCollatorForSupervisedDataset
         return batch
 
 
-def make_supervised_data_module(processor, data_args) -> Dict:
+def make_supervised_data_module(processor, data_args, model_max_length) -> Dict:
     """Make dataset and collator for supervised fine-tuning."""
+    print("Creating supervised dataset...")
     train_dataset = LazySupervisedDataset(processor, data_args=data_args)
+    print(f"Dataset created with {len(train_dataset)} samples")
+
     if data_args.data_flatten or data_args.data_packing:
-        data_collator = FlattenedDataCollatorForSupervisedDataset(processor.tokenizer)
+        print("Creating flattened data collator...")
+        data_collator = FlattenedDataCollatorForSupervisedDataset(processor.tokenizer, truncate_to_max_length=data_args.truncate_to_max_length, model_max_length=model_max_length)
+        print("Flattened data collator created")
         return dict(
             train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator
         )
+    print("Creating standard data collator...")
     data_collator = DataCollatorForSupervisedDataset(processor.tokenizer)
+    print("Standard data collator created")
     return dict(
         train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator
     )
