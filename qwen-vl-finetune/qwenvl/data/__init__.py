@@ -3,23 +3,62 @@ import re
 # # Define placeholders for dataset paths
 
 ANDROID_CONTROL_CASE1 = {
-    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_fixed/conversations_case1.jsonl",
-    "data_path": "/home/work/.shared/kyuseok/format_data",
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_2M/conversations_case1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 ANDROID_CONTROL_CASE2 = {
-    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_fixed/conversations_case2.jsonl",
-    "data_path": "/home/work/.shared/kyuseok/format_data",
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_2M/conversations_case2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 ANDROID_CONTROL_CASE3 = {
-    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_fixed/conversations_case3.jsonl",
-    "data_path": "/home/work/.shared/kyuseok/format_data",
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_2M/conversations_case3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 ANDROID_CONTROL_CASE4 = {
-    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_fixed/conversations_case4.jsonl",
-    "data_path": "/home/work/.shared/kyuseok/format_data",
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_2M/conversations_case4.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE1_1M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_1M/conversations_case1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE2_1M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_1M/conversations_case2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE3_1M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_1M/conversations_case3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE4_1M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_1M/conversations_case4.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+ANDROID_CONTROL_CASE1_4M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_4M/conversations_case1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE2_4M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_4M/conversations_case2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE3_4M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_4M/conversations_case3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE4_4M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_4M/conversations_case4.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 ANDROID_IN_THE_ZOO = {
@@ -33,12 +72,12 @@ AGENTRECK = {
 }
 
 ANDROID_IN_THE_WILD = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/AitW/train.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/AitW/train_2m.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 AMEX = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/AMEX/train.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/AMEX/train_2m.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
@@ -48,273 +87,831 @@ ARPO_SFT = {
 }
 
 UI_VISION = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision/ui_grounding_uivision_tasks.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision/ui_grounding_uivision_tasks_2m.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+
 UI_VISION_4MP = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision-4MP/ui_grounding_uivision_4mp_train.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision-4MP/ui_grounding_uivision_4mp_train_2m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+
+ANDROID_IN_THE_WILD_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AitW/train_1m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_IN_THE_WILD_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AitW/train_4m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+AMEX_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AMEX/train_1m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+AMEX_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AMEX/train_4m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+UI_VISION_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision/ui_grounding_uivision_tasks_1m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+UI_VISION_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision/ui_grounding_uivision_tasks_4m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+UI_VISION_4MP_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision-4MP/ui_grounding_uivision_4mp_train_1m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+UI_VISION_4MP_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision-4MP/ui_grounding_uivision_4mp_train_4m.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 GUI_R1 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/gui_r1/gui_r1_train.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_r1_2M/gui_r1_train.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_R1_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_r1_1M/gui_r1_train.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_R1_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_r1_4M/gui_r1_train.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 GUI_ODYSSEY = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/gui_odyssey/guiodyssey_action_prediction.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_odyssey_2M/guiodyssey_action_prediction.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_ODYSSEY_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_odyssey_1M/guiodyssey_action_prediction.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_ODYSSEY_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_odyssey_4M/guiodyssey_action_prediction.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 # Jedi datasets
 JEDI_AITW_L1 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_aitw-l1.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_aitw-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L1_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_aitw-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L1_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_aitw-l1.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_AITW_L2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_aitw-l2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_aitw-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_aitw-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_aitw-l2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_AITW_L3 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_aitw-l3.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_aitw-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L3_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_aitw-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L3_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_aitw-l3.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_AMEX_L1 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_amex-l1.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_amex-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L1_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_amex-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L1_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_amex-l1.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_AMEX_L2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_amex-l2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_amex-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_amex-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_amex-l2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_AMEX_L3 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_amex-l3.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_amex-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L3_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_amex-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L3_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_amex-l3.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_ANDROID_CONTROL_V2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_android_control-v2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_android_control-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ANDROID_CONTROL_V2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_android_control-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ANDROID_CONTROL_V2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_android_control-v2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_COAT_V2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_coat-v2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_coat-v2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+JEDI_COAT_V2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_coat-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COAT_V2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_coat-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_component_final_1.5m_cleaned_split.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_component_final_1.5m_cleaned_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_component_final_1.5m_cleaned_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_component_final_1.5m_cleaned_split.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_component_library_snap_icon_data_description_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_component_library_snap_icon_data_description_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_component_library_snap_icon_data_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_component_library_snap_icon_data_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_component_library_snap_icon_data_grounding_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_COMPONENT_V1_130K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_component_v1_130k.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_V1_130K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_V1_130K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_component_v1_130k.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_DOC_DATA_NEW = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_doc_data_new.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_doc_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_DATA_NEW_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_doc_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_DATA_NEW_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_doc_data_new.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_DOC_SCROLL_DATA_NEW = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_doc_scroll_data_new.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_doc_scroll_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_SCROLL_DATA_NEW_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_doc_scroll_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_SCROLL_DATA_NEW_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_doc_scroll_data_new.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_ETHERCALC_V1 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_ethercalc_v1.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_ethercalc_v1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ETHERCALC_V1_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_ethercalc_v1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ETHERCALC_V1_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_ethercalc_v1.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_GUIACT_WEB_MULTI = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_guiact-web-multi.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_guiact-web-multi.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_MULTI_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_guiact-web-multi.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_MULTI_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_guiact-web-multi.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_GUIACT_WEB_SINGLE_V2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_guiact-web-single-v2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_guiact-web-single-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_SINGLE_V2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_guiact-web-single-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_SINGLE_V2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_guiact-web-single-v2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_GUIDE_SI_10K_V2 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_guide_si_10k-v2.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_guide_si_10k-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIDE_SI_10K_V2_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_guide_si_10k-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIDE_SI_10K_V2_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_guide_si_10k-v2.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_GUIENV = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_guienv.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIENV_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIENV_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_guienv.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_ICON_V0222_DESCRIPTION = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_icon_v0222_description_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_icon_v0222_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_DESCRIPTION_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_icon_v0222_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_DESCRIPTION_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_icon_v0222_description_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_ICON_V0222_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_icon_v0222_grounding_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_icon_v0222_grounding_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_IOS_APP_DATA = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_ios_app_data_conversations-images_pure_color_background.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_ios_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_IOS_APP_DATA_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_ios_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_IOS_APP_DATA_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_ios_app_data_conversations-images_pure_color_background.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_LAYOUT200K_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_layout200k_grounding_training_data_qwen25.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_layout200k_grounding_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT200K_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_layout200k_grounding_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT200K_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_layout200k_grounding_training_data_qwen25.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_LAYOUT200K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_layout200k_training_data_qwen25.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_layout200k_training_data_qwen25.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+JEDI_LAYOUT200K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_layout200k_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT200K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_layout200k_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_LAYOUT400K_CLAUDE_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_layout400k_claude_grounding_training_data_qwen25_split.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_layout400k_claude_grounding_training_data_qwen25_split.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+
+
+JEDI_LAYOUT400K_CLAUDE_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_layout400k_claude_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT400K_CLAUDE_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_layout400k_claude_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_LAYOUT400K_CLAUDE = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_layout400k_claude_training_data_qwen25_split.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_layout400k_claude_training_data_qwen25_split.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+JEDI_LAYOUT400K_CLAUDE_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_layout400k_claude_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT400K_CLAUDE_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_layout400k_claude_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_MAC_APP_DATA = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_mac_app_data_conversations-images_pure_color_background.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_mac_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MAC_APP_DATA_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_mac_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MAC_APP_DATA_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_mac_app_data_conversations-images_pure_color_background.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_MIND2WEB_TRAIN = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_mind2web_train_v1.0.1.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_mind2web_train_v1.0.1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MIND2WEB_TRAIN_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_mind2web_train_v1.0.1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MIND2WEB_TRAIN_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_mind2web_train_v1.0.1.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_OMNIACT = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_omniact.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_omniact.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OMNIACT_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_omniact.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OMNIACT_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_omniact.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_OS_LAYOUT_V1_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_os_layout_v1_grounding_training_data_qwen25_split.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_os_layout_v1_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_os_layout_v1_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_os_layout_v1_grounding_training_data_qwen25_split.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_OS_LAYOUT_V1 = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_os_layout_v1_training_data_qwen25_split.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_os_layout_v1_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_os_layout_v1_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_os_layout_v1_training_data_qwen25_split.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_COMPONENT_FINAL_1_5M = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_component_final_1.5m.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_component_final_1.5m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_FINAL_1_5M_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_component_final_1.5m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_FINAL_1_5M_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_component_final_1.5m.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_component_library_snap_icon_data_grounding_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_COMPONENT_V1_130K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_component_v1_130k.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_V1_130K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_V1_130K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_component_v1_130k.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_GUIENV = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_guienv.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_GUIENV_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_GUIENV_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_guienv.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_ICON_V0222_GROUNDING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_icon_v0222_grounding_conversations.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_ICON_V0222_GROUNDING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_ICON_V0222_GROUNDING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_icon_v0222_grounding_conversations.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_RICOSCA = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_ricosca.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_RICOSCA_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_RICOSCA_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_ricosca.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_seeclick_mi_ui_tars_cleaned.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_seeclick_mi_ui_tars_cleaned.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_seeclick_ui_tars_cleaned_fixed.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_refusal_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_refusal_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_refusal_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_refusal_training_data_icon_conversations-images_grounded_merged.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_RICOIG16K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_ricoig16k.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_ricoig16k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_RICOIG16K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_ricoig16k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_RICOIG16K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_ricoig16k.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_RICOSCA = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_ricosca.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_ricosca.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
+JEDI_RICOSCA_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_RICOSCA_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 JEDI_SEECLICK_MI_UI_TARS_CLEANED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_seeclick_mi_ui_tars_cleaned.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_MI_UI_TARS_CLEANED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_MI_UI_TARS_CLEANED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_seeclick_mi_ui_tars_cleaned.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_SEECLICK_UI_TARS_CLEANED_FIXED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_seeclick_ui_tars_cleaned_fixed.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_SLIDE_V1_17K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_slide_v1_17k.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_slide_v1_17k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SLIDE_V1_17K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_slide_v1_17k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SLIDE_V1_17K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_slide_v1_17k.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_training_data_icon_conversations-images_grounded_merged.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_training_data_icon_conversations-images_pure_color_background.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_training_data_icon_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_training_data_icon_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_training_data_icon_conversations-images_pure_color_background.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_UI_REFEXP = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_ui_refexp.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_ui_refexp.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_UI_REFEXP_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_ui_refexp.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_UI_REFEXP_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_ui_refexp.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_WEBUI350K = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_webui350k.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_webui350k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WEBUI350K_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_webui350k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WEBUI350K_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_webui350k.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
 JEDI_WIDGET_CAPTIONING = {
-    "annotation_path": "/home/work/.shared/data/mfm/json/jedi/jedi_widget_captioning.jsonl",
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_2M/jedi_widget_captioning.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WIDGET_CAPTIONING_1M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_1M/jedi_widget_captioning.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WIDGET_CAPTIONING_4M = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_4M/jedi_widget_captioning.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
 }
 
@@ -388,6 +985,126 @@ data_dict = {
     "jedi_webui350k": JEDI_WEBUI350K,
     "jedi_widget_captioning": JEDI_WIDGET_CAPTIONING,
     "gui_mid": GUI_MID,
+    "android_control_case1_1m": ANDROID_CONTROL_CASE1_1M,
+    "android_control_case2_1m": ANDROID_CONTROL_CASE2_1M,
+    "android_control_case3_1m": ANDROID_CONTROL_CASE3_1M,
+    "android_control_case4_1m": ANDROID_CONTROL_CASE4_1M,
+    "android_control_case1_4m": ANDROID_CONTROL_CASE1_4M,
+    "android_control_case2_4m": ANDROID_CONTROL_CASE2_4M,
+    "android_control_case3_4m": ANDROID_CONTROL_CASE3_4M,
+    "android_control_case4_4m": ANDROID_CONTROL_CASE4_4M,
+    "android_in_the_wild_1m": ANDROID_IN_THE_WILD_1M,
+    "android_in_the_wild_4m": ANDROID_IN_THE_WILD_4M,
+    "amex_1m": AMEX_1M,
+    "amex_4m": AMEX_4M,
+    "ui_vision_1m": UI_VISION_1M,
+    "ui_vision_4m": UI_VISION_4M,
+    "ui_vision_4mp_1m": UI_VISION_4MP_1M,
+    "ui_vision_4mp_4m": UI_VISION_4MP_4M,
+    "gui_r1_1m": GUI_R1_1M,
+    "gui_r1_4m": GUI_R1_4M,
+    "gui_odyssey_1m": GUI_ODYSSEY_1M,
+    "gui_odyssey_4m": GUI_ODYSSEY_4M,
+    "jedi_aitw_l1_1m": JEDI_AITW_L1_1M,
+    "jedi_aitw_l1_4m": JEDI_AITW_L1_4M,
+    "jedi_aitw_l2_1m": JEDI_AITW_L2_1M,
+    "jedi_aitw_l2_4m": JEDI_AITW_L2_4M,
+    "jedi_aitw_l3_1m": JEDI_AITW_L3_1M,
+    "jedi_aitw_l3_4m": JEDI_AITW_L3_4M,
+    "jedi_amex_l1_1m": JEDI_AMEX_L1_1M,
+    "jedi_amex_l1_4m": JEDI_AMEX_L1_4M,
+    "jedi_amex_l2_1m": JEDI_AMEX_L2_1M,
+    "jedi_amex_l2_4m": JEDI_AMEX_L2_4M,
+    "jedi_amex_l3_1m": JEDI_AMEX_L3_1M,
+    "jedi_amex_l3_4m": JEDI_AMEX_L3_4M,
+    "jedi_android_control_v2_1m": JEDI_ANDROID_CONTROL_V2_1M,
+    "jedi_android_control_v2_4m": JEDI_ANDROID_CONTROL_V2_4M,
+    "jedi_coat_v2_1m": JEDI_COAT_V2_1M,
+    "jedi_coat_v2_4m": JEDI_COAT_V2_4M,
+    "jedi_component_final_1_5m_cleaned_split_1m": JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_1M,
+    "jedi_component_final_1_5m_cleaned_split_4m": JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_4M,
+    "jedi_component_library_snap_icon_data_description_1m": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_1M,
+    "jedi_component_library_snap_icon_data_description_4m": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_4M,
+    "jedi_component_library_snap_icon_data_grounding_1m": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_1M,
+    "jedi_component_library_snap_icon_data_grounding_4m": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_4M,
+    "jedi_component_v1_130k_1m": JEDI_COMPONENT_V1_130K_1M,
+    "jedi_component_v1_130k_4m": JEDI_COMPONENT_V1_130K_4M,
+    "jedi_doc_data_new_1m": JEDI_DOC_DATA_NEW_1M,
+    "jedi_doc_data_new_4m": JEDI_DOC_DATA_NEW_4M,
+    "jedi_doc_scroll_data_new_1m": JEDI_DOC_SCROLL_DATA_NEW_1M,
+    "jedi_doc_scroll_data_new_4m": JEDI_DOC_SCROLL_DATA_NEW_4M,
+    "jedi_ethercalc_v1_1m": JEDI_ETHERCALC_V1_1M,
+    "jedi_ethercalc_v1_4m": JEDI_ETHERCALC_V1_4M,
+    "jedi_guiact_web_multi_1m": JEDI_GUIACT_WEB_MULTI_1M,
+    "jedi_guiact_web_multi_4m": JEDI_GUIACT_WEB_MULTI_4M,
+    "jedi_guiact_web_single_v2_1m": JEDI_GUIACT_WEB_SINGLE_V2_1M,
+    "jedi_guiact_web_single_v2_4m": JEDI_GUIACT_WEB_SINGLE_V2_4M,
+    "jedi_guide_si_10k_v2_1m": JEDI_GUIDE_SI_10K_V2_1M,
+    "jedi_guide_si_10k_v2_4m": JEDI_GUIDE_SI_10K_V2_4M,
+    "jedi_guienv_1m": JEDI_GUIENV_1M,
+    "jedi_guienv_4m": JEDI_GUIENV_4M,
+    "jedi_icon_v0222_description_1m": JEDI_ICON_V0222_DESCRIPTION_1M,
+    "jedi_icon_v0222_description_4m": JEDI_ICON_V0222_DESCRIPTION_4M,
+    "jedi_icon_v0222_grounding_1m": JEDI_ICON_V0222_GROUNDING_1M,
+    "jedi_icon_v0222_grounding_4m": JEDI_ICON_V0222_GROUNDING_4M,
+    "jedi_ios_app_data_1m": JEDI_IOS_APP_DATA_1M,
+    "jedi_ios_app_data_4m": JEDI_IOS_APP_DATA_4M,
+    "jedi_layout200k_grounding_1m": JEDI_LAYOUT200K_GROUNDING_1M,
+    "jedi_layout200k_grounding_4m": JEDI_LAYOUT200K_GROUNDING_4M,
+    "jedi_layout200k_1m": JEDI_LAYOUT200K_1M,
+    "jedi_layout200k_4m": JEDI_LAYOUT200K_4M,
+    "jedi_layout400k_claude_grounding_1m": JEDI_LAYOUT400K_CLAUDE_GROUNDING_1M,
+    "jedi_layout400k_claude_grounding_4m": JEDI_LAYOUT400K_CLAUDE_GROUNDING_4M,
+    "jedi_layout400k_claude_1m": JEDI_LAYOUT400K_CLAUDE_1M,
+    "jedi_layout400k_claude_4m": JEDI_LAYOUT400K_CLAUDE_4M,
+    "jedi_mac_app_data_1m": JEDI_MAC_APP_DATA_1M,
+    "jedi_mac_app_data_4m": JEDI_MAC_APP_DATA_4M,
+    "jedi_mind2web_train_1m": JEDI_MIND2WEB_TRAIN_1M,
+    "jedi_mind2web_train_4m": JEDI_MIND2WEB_TRAIN_4M,
+    "jedi_omniact_1m": JEDI_OMNIACT_1M,
+    "jedi_omniact_4m": JEDI_OMNIACT_4M,
+    "jedi_os_layout_v1_grounding_1m": JEDI_OS_LAYOUT_V1_GROUNDING_1M,
+    "jedi_os_layout_v1_grounding_4m": JEDI_OS_LAYOUT_V1_GROUNDING_4M,
+    "jedi_os_layout_v1_1m": JEDI_OS_LAYOUT_V1_1M,
+    "jedi_os_layout_v1_4m": JEDI_OS_LAYOUT_V1_4M,
+    "jedi_refusal_component_final_1_5m_1m": JEDI_REFUSAL_COMPONENT_FINAL_1_5M_1M,
+    "jedi_refusal_component_final_1_5m_4m": JEDI_REFUSAL_COMPONENT_FINAL_1_5M_4M,
+    "jedi_refusal_component_library_snap_icon_data_grounding_1m": JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_1M,
+    "jedi_refusal_component_library_snap_icon_data_grounding_4m": JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_4M,
+    "jedi_refusal_component_v1_130k_1m": JEDI_REFUSAL_COMPONENT_V1_130K_1M,
+    "jedi_refusal_component_v1_130k_4m": JEDI_REFUSAL_COMPONENT_V1_130K_4M,
+    "jedi_refusal_guienv_1m": JEDI_REFUSAL_GUIENV_1M,
+    "jedi_refusal_guienv_4m": JEDI_REFUSAL_GUIENV_4M,
+    "jedi_refusal_icon_v0222_grounding_1m": JEDI_REFUSAL_ICON_V0222_GROUNDING_1M,
+    "jedi_refusal_icon_v0222_grounding_4m": JEDI_REFUSAL_ICON_V0222_GROUNDING_4M,
+    "jedi_refusal_ricosca_1m": JEDI_REFUSAL_RICOSCA_1M,
+    "jedi_refusal_ricosca_4m": JEDI_REFUSAL_RICOSCA_4M,
+    "jedi_refusal_seeclick_mi_ui_tars_cleaned_1m": JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_1M,
+    "jedi_refusal_seeclick_mi_ui_tars_cleaned_4m": JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_4M,
+    "jedi_refusal_seeclick_ui_tars_cleaned_fixed_1m": JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_1M,
+    "jedi_refusal_seeclick_ui_tars_cleaned_fixed_4m": JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_4M,
+    "jedi_refusal_training_data_icon_grounded_merged_1m": JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_1M,
+    "jedi_refusal_training_data_icon_grounded_merged_4m": JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_4M,
+    "jedi_ricoig16k_1m": JEDI_RICOIG16K_1M,
+    "jedi_ricoig16k_4m": JEDI_RICOIG16K_4M,
+    "jedi_ricosca_1m": JEDI_RICOSCA_1M,
+    "jedi_ricosca_4m": JEDI_RICOSCA_4M,
+    "jedi_seeclick_mi_ui_tars_cleaned_1m": JEDI_SEECLICK_MI_UI_TARS_CLEANED_1M,
+    "jedi_seeclick_mi_ui_tars_cleaned_4m": JEDI_SEECLICK_MI_UI_TARS_CLEANED_4M,
+    "jedi_seeclick_ui_tars_cleaned_fixed_1m": JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_1M,
+    "jedi_seeclick_ui_tars_cleaned_fixed_4m": JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_4M,
+    "jedi_slide_v1_17k_1m": JEDI_SLIDE_V1_17K_1M,
+    "jedi_slide_v1_17k_4m": JEDI_SLIDE_V1_17K_4M,
+    "jedi_training_data_icon_grounded_merged_1m": JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_1M,
+    "jedi_training_data_icon_grounded_merged_4m": JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_4M,
+    "jedi_training_data_icon_pure_color_background_1m": JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_1M,
+    "jedi_training_data_icon_pure_color_background_4m": JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_4M,
+    "jedi_ui_refexp_1m": JEDI_UI_REFEXP_1M,
+    "jedi_ui_refexp_4m": JEDI_UI_REFEXP_4M,
+    "jedi_webui350k_1m": JEDI_WEBUI350K_1M,
+    "jedi_webui350k_4m": JEDI_WEBUI350K_4M,
+    "jedi_widget_captioning_1m": JEDI_WIDGET_CAPTIONING_1M,
+    "jedi_widget_captioning_4m": JEDI_WIDGET_CAPTIONING_4M,
 }
 
 
