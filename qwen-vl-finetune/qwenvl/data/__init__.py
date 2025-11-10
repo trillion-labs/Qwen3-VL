@@ -2,6 +2,10 @@ import re
 
 # # Define placeholders for dataset paths
 
+LLAVA_ONE_VISION = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/llava-onevision/general_vqa_sampled.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
 ANDROID_CONTROL_CASE1 = {
     "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_2M/conversations_case1.jsonl",
     "data_path": "/home/work/.shared/data/mfm/images",
@@ -62,7 +66,7 @@ ANDROID_CONTROL_CASE4_4M = {
 }
 
 ANDROID_IN_THE_ZOO = {
-    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_in_the_zoo/aitz_merged_data_v2.json",
+    "annotation_path": "/home/work/.shared/data/mfm/json/android_in_the_zoo/aitz_data_filtered.jsonl",
     "data_path": "/home/work/.shared/kyuseok/format_data",
 }
 
@@ -916,9 +920,317 @@ JEDI_WIDGET_CAPTIONING_4M = {
 }
 
 GUI_MID = {
-    "annotation_path": "/home/work/.shared/data/GUIMid/GUIMid_fixed.json",
-    "data_path": "/home/work/.shared/data/GUIMid",
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_mid/gui_mid.jsonl",
+    "data_path": "/home/work/.shared/sungjun/GUIMid",
 }
+
+ANDROID_CONTROL_CASE1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/android_control_qwen3vl/conversations_case1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/android_control_qwen3vl/conversations_case2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE3_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/android_control_qwen3vl/conversations_case3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE4_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/android_control_qwen3vl/conversations_case4.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_CONTROL_CASE1_1M = {
+    "annotation_path": "/home/work/.shared/kyuseok/format_data/processed_data/android_control_qwen_style_action_history_1M/conversations_case1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+ANDROID_IN_THE_WILD_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AitW/train_qwen3vl.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+AMEX_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/AMEX/train_qwen3vl.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+
+UI_VISION_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision/ui_grounding_uivision_tasks_qwen3vl.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+UI_VISION_4MP_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/UI-Vision-4MP/ui_grounding_uivision_4mp_train_qwen3vl.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_R1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_r1_qwen3/gui_r1_train.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+GUI_ODYSSEY_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/gui_odyssey_qwen3/guiodyssey_action_prediction.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+# Jedi Qwen3 datasets
+JEDI_AITW_L1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_aitw-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_aitw-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AITW_L3_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_aitw-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_amex-l1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_amex-l2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_AMEX_L3_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_amex-l3.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ANDROID_CONTROL_V2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_android_control-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COAT_V2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_coat-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_component_final_1.5m_cleaned_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_component_library_snap_icon_data_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_COMPONENT_V1_130K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_DATA_NEW_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_doc_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_DOC_SCROLL_DATA_NEW_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_doc_scroll_data_new.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ETHERCALC_V1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_ethercalc_v1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_MULTI_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_guiact-web-multi.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIACT_WEB_SINGLE_V2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_guiact-web-single-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIDE_SI_10K_V2_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_guide_si_10k-v2.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_GUIENV_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_DESCRIPTION_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_icon_v0222_description_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_ICON_V0222_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_IOS_APP_DATA_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_ios_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT200K_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_layout200k_grounding_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT200K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_layout200k_training_data_qwen25.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT400K_CLAUDE_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_layout400k_claude_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_LAYOUT400K_CLAUDE_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_layout400k_claude_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MAC_APP_DATA_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_mac_app_data_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_MIND2WEB_TRAIN_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_mind2web_train_v1.0.1.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OMNIACT_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_omniact.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_os_layout_v1_grounding_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_OS_LAYOUT_V1_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_os_layout_v1_training_data_qwen25_split.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_FINAL_1_5M_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_component_final_1.5m.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_component_library_snap_icon_data_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_COMPONENT_V1_130K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_component_v1_130k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_GUIENV_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_guienv.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_ICON_V0222_GROUNDING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_icon_v0222_grounding_conversations.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_RICOSCA_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_refusal_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_RICOIG16K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_ricoig16k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_RICOSCA_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_ricosca.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_MI_UI_TARS_CLEANED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_seeclick_mi_ui_tars_cleaned.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_seeclick_ui_tars_cleaned_fixed.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_SLIDE_V1_17K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_slide_v1_17k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_training_data_icon_conversations-images_grounded_merged.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_training_data_icon_conversations-images_pure_color_background.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_UI_REFEXP_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_ui_refexp.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WEBUI350K_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_webui350k.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
+JEDI_WIDGET_CAPTIONING_QWEN3 = {
+    "annotation_path": "/home/work/.shared/data/mfm/json/jedi_qwen3/jedi_widget_captioning.jsonl",
+    "data_path": "/home/work/.shared/data/mfm/images",
+}
+
 
 data_dict = {
     "android_in_the_zoo": ANDROID_IN_THE_ZOO,
@@ -1105,6 +1417,67 @@ data_dict = {
     "jedi_webui350k_4m": JEDI_WEBUI350K_4M,
     "jedi_widget_captioning_1m": JEDI_WIDGET_CAPTIONING_1M,
     "jedi_widget_captioning_4m": JEDI_WIDGET_CAPTIONING_4M,
+    "android_control_case1_qwen3": ANDROID_CONTROL_CASE1_QWEN3,
+    "android_control_case2_qwen3": ANDROID_CONTROL_CASE2_QWEN3,
+    "android_control_case3_qwen3": ANDROID_CONTROL_CASE3_QWEN3,
+    "android_control_case4_qwen3": ANDROID_CONTROL_CASE4_QWEN3,
+    "android_in_the_wild_qwen3": ANDROID_IN_THE_WILD_QWEN3,
+    "amex_qwen3": AMEX_QWEN3,
+    "ui_vision_qwen3": UI_VISION_QWEN3,
+    "ui_vision_4mp_qwen3": UI_VISION_4MP_QWEN3,
+    "gui_r1_qwen3": GUI_R1_QWEN3,
+    "gui_odyssey_qwen3": GUI_ODYSSEY_QWEN3,
+    "jedi_aitw_l1_qwen3": JEDI_AITW_L1_QWEN3,
+    "jedi_aitw_l2_qwen3": JEDI_AITW_L2_QWEN3,
+    "jedi_aitw_l3_qwen3": JEDI_AITW_L3_QWEN3,
+    "jedi_amex_l1_qwen3": JEDI_AMEX_L1_QWEN3,
+    "jedi_amex_l2_qwen3": JEDI_AMEX_L2_QWEN3,
+    "jedi_amex_l3_qwen3": JEDI_AMEX_L3_QWEN3,
+    "jedi_android_control_v2_qwen3": JEDI_ANDROID_CONTROL_V2_QWEN3,
+    "jedi_coat_v2_qwen3": JEDI_COAT_V2_QWEN3,
+    "jedi_component_final_1_5m_cleaned_split_qwen3": JEDI_COMPONENT_FINAL_1_5M_CLEANED_SPLIT_QWEN3,
+    "jedi_component_library_snap_icon_data_description_qwen3": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_DESCRIPTION_QWEN3,
+    "jedi_component_library_snap_icon_data_grounding_qwen3": JEDI_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_QWEN3,
+    "jedi_component_v1_130k_qwen3": JEDI_COMPONENT_V1_130K_QWEN3,
+    "jedi_doc_data_new_qwen3": JEDI_DOC_DATA_NEW_QWEN3,
+    "jedi_doc_scroll_data_new_qwen3": JEDI_DOC_SCROLL_DATA_NEW_QWEN3,
+    "jedi_ethercalc_v1_qwen3": JEDI_ETHERCALC_V1_QWEN3,
+    "jedi_guiact_web_multi_qwen3": JEDI_GUIACT_WEB_MULTI_QWEN3,
+    "jedi_guiact_web_single_v2_qwen3": JEDI_GUIACT_WEB_SINGLE_V2_QWEN3,
+    "jedi_guide_si_10k_v2_qwen3": JEDI_GUIDE_SI_10K_V2_QWEN3,
+    "jedi_guienv_qwen3": JEDI_GUIENV_QWEN3,
+    "jedi_icon_v0222_description_qwen3": JEDI_ICON_V0222_DESCRIPTION_QWEN3,
+    "jedi_icon_v0222_grounding_qwen3": JEDI_ICON_V0222_GROUNDING_QWEN3,
+    "jedi_ios_app_data_qwen3": JEDI_IOS_APP_DATA_QWEN3,
+    "jedi_layout200k_grounding_qwen3": JEDI_LAYOUT200K_GROUNDING_QWEN3,
+    "jedi_layout200k_qwen3": JEDI_LAYOUT200K_QWEN3,
+    "jedi_layout400k_claude_grounding_qwen3": JEDI_LAYOUT400K_CLAUDE_GROUNDING_QWEN3,
+    "jedi_layout400k_claude_qwen3": JEDI_LAYOUT400K_CLAUDE_QWEN3,
+    "jedi_mac_app_data_qwen3": JEDI_MAC_APP_DATA_QWEN3,
+    "jedi_mind2web_train_qwen3": JEDI_MIND2WEB_TRAIN_QWEN3,
+    "jedi_omniact_qwen3": JEDI_OMNIACT_QWEN3,
+    "jedi_os_layout_v1_grounding_qwen3": JEDI_OS_LAYOUT_V1_GROUNDING_QWEN3,
+    "jedi_os_layout_v1_qwen3": JEDI_OS_LAYOUT_V1_QWEN3,
+    "jedi_refusal_component_final_1_5m_qwen3": JEDI_REFUSAL_COMPONENT_FINAL_1_5M_QWEN3,
+    "jedi_refusal_component_library_snap_icon_data_grounding_qwen3": JEDI_REFUSAL_COMPONENT_LIBRARY_SNAP_ICON_DATA_GROUNDING_QWEN3,
+    "jedi_refusal_component_v1_130k_qwen3": JEDI_REFUSAL_COMPONENT_V1_130K_QWEN3,
+    "jedi_refusal_guienv_qwen3": JEDI_REFUSAL_GUIENV_QWEN3,
+    "jedi_refusal_icon_v0222_grounding_qwen3": JEDI_REFUSAL_ICON_V0222_GROUNDING_QWEN3,
+    "jedi_refusal_ricosca_qwen3": JEDI_REFUSAL_RICOSCA_QWEN3,
+    "jedi_refusal_seeclick_mi_ui_tars_cleaned_qwen3": JEDI_REFUSAL_SEECLICK_MI_UI_TARS_CLEANED_QWEN3,
+    "jedi_refusal_seeclick_ui_tars_cleaned_fixed_qwen3": JEDI_REFUSAL_SEECLICK_UI_TARS_CLEANED_FIXED_QWEN3,
+    "jedi_refusal_training_data_icon_grounded_merged_qwen3": JEDI_REFUSAL_TRAINING_DATA_ICON_GROUNDED_MERGED_QWEN3,
+    "jedi_ricoig16k_qwen3": JEDI_RICOIG16K_QWEN3,
+    "jedi_ricosca_qwen3": JEDI_RICOSCA_QWEN3,
+    "jedi_seeclick_mi_ui_tars_cleaned_qwen3": JEDI_SEECLICK_MI_UI_TARS_CLEANED_QWEN3,
+    "jedi_seeclick_ui_tars_cleaned_fixed_qwen3": JEDI_SEECLICK_UI_TARS_CLEANED_FIXED_QWEN3,
+    "jedi_slide_v1_17k_qwen3": JEDI_SLIDE_V1_17K_QWEN3,
+    "jedi_training_data_icon_grounded_merged_qwen3": JEDI_TRAINING_DATA_ICON_GROUNDED_MERGED_QWEN3,
+    "jedi_training_data_icon_pure_color_background_qwen3": JEDI_TRAINING_DATA_ICON_PURE_COLOR_BACKGROUND_QWEN3,
+    "jedi_ui_refexp_qwen3": JEDI_UI_REFEXP_QWEN3,
+    "jedi_webui350k_qwen3": JEDI_WEBUI350K_QWEN3,
+    "jedi_widget_captioning_qwen3": JEDI_WIDGET_CAPTIONING_QWEN3,
+    "llava_one_vision": LLAVA_ONE_VISION,
 }
 
 
