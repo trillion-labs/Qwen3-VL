@@ -1,267 +1,180 @@
-# Adopted from https://github.com/lm-sys/FastChat. Below is the original copyright:
-# Adopted from tatsu-lab@stanford_alpaca. Below is the original copyright:
-#    Copyright 2023 Rohan Taori, Ishaan Gulrajani, Tianyi Zhang, Yann Dubois, Xuechen Li
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
-
-import os
-import logging
-import pathlib
 import torch
-import transformers
-import sys
-from pathlib import Path
-
-project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root))
-
-from trainer import replace_qwen2_vl_attention_class
-
-from transformers import (
-    Qwen2VLForConditionalGeneration,
-    Qwen2_5_VLForConditionalGeneration,
-    Qwen3VLForConditionalGeneration,
-    Qwen3VLMoeForConditionalGeneration
+from typing import Optional, Union, Any
+from transformers import Qwen3VLForConditionalGeneration, Qwen3VLModel
+from transformers.cache_utils import Cache
+from transformers.utils import is_torchdynamo_compiling
+from transformers.models.qwen3_vl.modeling_qwen3_vl import (
+    Qwen3VLModelOutputWithPast,
 )
-from qwenvl.model.qwen2_5_vl import Qwen2_5_VLForConditionalGenerationWithDummy
-from qwenvl.model.qwen3_vl import Qwen3VLForConditionalGenerationWithDummy
-from qwenvl.data.data_processor import make_supervised_data_module
-from qwenvl.train.argument import (
-    ModelArguments,
-    DataArguments,
-    TrainingArguments,
-)
-from transformers import AutoProcessor, Trainer
-
-local_rank = None
 
 
-def rank0_print(*args):
-    if local_rank == 0:
-        print(*args)
+class Qwen3VLModelWithDummy(Qwen3VLModel):
+    """
+    Qwen3-VL Model with custom forward function that handles dummy pixel values
+    for mixed text-image data during training.
+    """
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.in_channels = config.vision_config.in_channels
+        self.temporal_patch_size = config.vision_config.temporal_patch_size
+        self.patch_size = config.vision_config.patch_size
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[Cache] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        pixel_values: Optional[torch.Tensor] = None,
+        pixel_values_videos: Optional[torch.FloatTensor] = None,
+        image_grid_thw: Optional[torch.LongTensor] = None,
+        video_grid_thw: Optional[torch.LongTensor] = None,
+        cache_position: Optional[torch.LongTensor] = None,
+        **kwargs: Any,
+    ) -> Union[tuple, Qwen3VLModelOutputWithPast]:
+        r"""
+        image_grid_thw (`torch.LongTensor` of shape `(num_images, 3)`, *optional*):
+            The temporal, height and width of feature shape of each image in LLM.
+        video_grid_thw (`torch.LongTensor` of shape `(num_videos, 3)`, *optional*):
+            The temporal, height and width of feature shape of each video in LLM.
+        """
+
+        if inputs_embeds is None:
+            inputs_embeds = self.get_input_embeddings()(input_ids)
+
+        image_mask = None
+        video_mask = None
+
+        if pixel_values is not None:
+            image_embeds, deepstack_image_embeds = self.get_image_features(pixel_values, image_grid_thw)
+            image_embeds = torch.cat(image_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
+            image_mask, _ = self.get_placeholder_mask(
+                input_ids, inputs_embeds=inputs_embeds, image_features=image_embeds
+            )
+
+            inputs_embeds = inputs_embeds.masked_scatter(image_mask, image_embeds)
+
+        if pixel_values_videos is not None:
+            video_embeds, deepstack_video_embeds = self.get_video_features(pixel_values_videos, video_grid_thw)
+            video_embeds = torch.cat(video_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
+            _, video_mask = self.get_placeholder_mask(
+                input_ids, inputs_embeds=inputs_embeds, video_features=video_embeds
+            )
+            inputs_embeds = inputs_embeds.masked_scatter(video_mask, video_embeds)
+
+        visual_pos_masks = None
+        deepstack_visual_embeds = None
+        if image_mask is not None and video_mask is not None:
+            # aggregate visual_pos_masks and deepstack_visual_embeds
+            image_mask = image_mask[..., 0]
+            video_mask = video_mask[..., 0]
+            visual_pos_masks = image_mask | video_mask
+            deepstack_visual_embeds = []
+            image_mask_joint = image_mask[visual_pos_masks]
+            video_mask_joint = video_mask[visual_pos_masks]
+            for img_embed, vid_embed in zip(deepstack_image_embeds, deepstack_video_embeds):
+                embed_joint = img_embed.new_zeros(visual_pos_masks.sum(), img_embed.shape[-1]).to(img_embed.device)
+                embed_joint[image_mask_joint, :] = img_embed
+                embed_joint[video_mask_joint, :] = vid_embed
+                deepstack_visual_embeds.append(embed_joint)
+        elif image_mask is not None:
+            image_mask = image_mask[..., 0]
+            visual_pos_masks = image_mask
+            deepstack_visual_embeds = deepstack_image_embeds
+        elif video_mask is not None:
+            video_mask = video_mask[..., 0]
+            visual_pos_masks = video_mask
+            deepstack_visual_embeds = deepstack_video_embeds
+
+        if pixel_values is None and pixel_values_videos is None:  # handle mixed text-image data
+            patch_dim = self.in_channels * self.temporal_patch_size * self.patch_size**2
+            pixel_values = torch.zeros((16, patch_dim), dtype=inputs_embeds.dtype, device=inputs_embeds.device)
+            image_grid_thw = torch.tensor([[1, 4, 4]], dtype=torch.long, device=inputs_embeds.device)
+            image_embeds, dummy_deepstack_image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+            inputs_embeds += 0.0 * image_embeds.mean()
+            for emb in dummy_deepstack_image_embeds or []:
+                inputs_embeds += 0.0 * emb.mean()
+
+        if position_ids is None:
+            attention_mask_tensor = (
+                attention_mask if not isinstance(attention_mask, dict) else attention_mask["full_attention"]
+            )
+            if attention_mask_tensor is not None and attention_mask_tensor.ndim == 4:
+                attention_mask_tensor = torch.diagonal(attention_mask_tensor[:, 0], dim1=1, dim2=2)
+                # Only apply conversion for floating point tensors (inverted masks)
+                if attention_mask_tensor.dtype.is_floating_point:
+                    attention_mask_tensor = attention_mask_tensor / torch.finfo(attention_mask_tensor.dtype).min
+                    attention_mask_tensor = (1.0 - attention_mask_tensor).int()
+
+            # Calculate RoPE index once per generation in the pre-fill stage only.
+            # When compiling, we can't check tensor values thus we check only input length
+            # It is safe to assume that `length!=1` means we're in pre-fill because compiled
+            # models currently cannot do asssisted decoding
+            prefill_compiled_stage = is_torchdynamo_compiling() and (
+                (input_ids is not None and input_ids.shape[1] != 1)
+                or (inputs_embeds is not None and inputs_embeds.shape[1] != 1)
+            )
+            prefill_noncompiled_stage = not is_torchdynamo_compiling() and (
+                (cache_position is not None and cache_position[0] == 0)
+                or (past_key_values is None or past_key_values.get_seq_length() == 0)
+            )
+            if (prefill_compiled_stage or prefill_noncompiled_stage) or self.rope_deltas is None:
+                position_ids, rope_deltas = self.get_rope_index(
+                    input_ids,
+                    image_grid_thw,
+                    video_grid_thw,
+                    attention_mask=attention_mask_tensor,
+                )
+                self.rope_deltas = rope_deltas
+            # then use the prev pre-calculated rope-deltas to get the correct position ids
+            else:
+                batch_size, seq_length, _ = inputs_embeds.shape
+                delta = (
+                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device)
+                    if cache_position is not None
+                    else 0
+                )
+                position_ids = torch.arange(seq_length, device=inputs_embeds.device)
+                position_ids = position_ids.view(1, -1).expand(batch_size, -1)
+                if cache_position is not None:  # otherwise `deltas` is an int `0`
+                    delta = delta.repeat_interleave(batch_size // delta.shape[0], dim=0)
+                position_ids = position_ids.add(delta)
+                position_ids = position_ids.unsqueeze(0).expand(3, -1, -1)
 
 
-def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: str):
-    """Collects the state dict and dump to disk."""
 
-    if trainer.deepspeed:
-        torch.cuda.synchronize()
-        trainer.save_model(output_dir)
-        return
-
-    state_dict = trainer.model.state_dict()
-    if trainer.args.should_save:
-        cpu_state_dict = {key: value.cpu() for key, value in state_dict.items()}
-        del state_dict
-        trainer._save(output_dir, state_dict=cpu_state_dict)  # noqa
-
-
-def set_model(model_args, model):
-    if model_args.tune_mm_vision:
-        for n, p in model.visual.named_parameters():
-            p.requires_grad = True
-    else:
-        for n, p in model.visual.named_parameters():
-            p.requires_grad = False
-
-    if model_args.tune_mm_mlp:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = True
-    else:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = False
-
-    if model_args.tune_mm_llm:
-        for n, p in model.language_model.named_parameters():
-            p.requires_grad = True
-        model.lm_head.requires_grad = True
-    else:
-        for n, p in model.language_model.named_parameters():
-            p.requires_grad = False
-        model.lm_head.requires_grad = False
-
-
-def train(attn_implementation="flash_attention_2"):
-    global local_rank
-
-    print("=" * 80)
-    print("STARTING TRAIN FUNCTION")
-    print("=" * 80)
-
-    print("Parsing arguments...")
-    parser = transformers.HfArgumentParser(
-        (ModelArguments, DataArguments, TrainingArguments)
-    )
-    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-    print("Arguments parsed successfully")
-
-    local_rank = training_args.local_rank
-    os.makedirs(training_args.output_dir, exist_ok=True)
-
-    print(f"Local rank: {local_rank}")
-    print(f"Output directory: {training_args.output_dir}")
-    print(f"Loading model from: {model_args.model_name_or_path}")
-
-    if "qwen3" in model_args.model_name_or_path.lower() and "a" in Path(model_args.model_name_or_path.rstrip("/")).name.lower():
-        print("Detected Qwen3VL MoE model - loading...")
-        model = Qwen3VLMoeForConditionalGeneration.from_pretrained(
-            model_args.model_name_or_path,
-            cache_dir=training_args.cache_dir,
-            attn_implementation=attn_implementation,
-            dtype=(torch.bfloat16 if training_args.bf16 else None),
+        outputs = self.language_model(
+            input_ids=None,
+            position_ids=position_ids,
+            attention_mask=attention_mask,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            cache_position=cache_position,
+            visual_pos_masks=visual_pos_masks,
+            deepstack_visual_embeds=deepstack_visual_embeds,
+            **kwargs,
         )
-        data_args.model_type = "qwen3vl"
-        print("Qwen3VL MoE model loaded successfully")
-    elif "qwen3" in model_args.model_name_or_path.lower():
-        print("Detected Qwen3VL model - loading...")
-        if model_args.use_dummy_handler:
-            print("Using dummy handler version")
-            model = Qwen3VLForConditionalGenerationWithDummy.from_pretrained(
-                model_args.model_name_or_path,
-                cache_dir=training_args.cache_dir,
-                attn_implementation=attn_implementation,
-                dtype=(torch.bfloat16 if training_args.bf16 else None),
-            )
-        else:
-            print("Using standard version")
-            model = Qwen3VLForConditionalGeneration.from_pretrained(
-                model_args.model_name_or_path,
-                cache_dir=training_args.cache_dir,
-                attn_implementation=attn_implementation,
-                dtype=(torch.bfloat16 if training_args.bf16 else None),
-            )
-        data_args.model_type = "qwen3vl"
-        print("Qwen3VL model loaded successfully")
-    elif "qwen2.5" in model_args.model_name_or_path.lower():
-        print("Detected Qwen2.5VL model - loading...")
-        if model_args.use_dummy_handler:
-            print("Using dummy handler version")
-            model = Qwen2_5_VLForConditionalGenerationWithDummy.from_pretrained(
-                model_args.model_name_or_path,
-                cache_dir=training_args.cache_dir,
-                attn_implementation=attn_implementation,
-                dtype=(torch.bfloat16 if training_args.bf16 else None),
-            )
-        else:
-            print("Using standard version")
-            model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                model_args.model_name_or_path,
-                cache_dir=training_args.cache_dir,
-                attn_implementation=attn_implementation,
-                dtype=(torch.bfloat16 if training_args.bf16 else None),
-            )
-        data_args.model_type = "qwen2.5vl"
-        print("Qwen2.5VL model loaded successfully")
-    else:
-        print("Detected Qwen2VL model - loading...")
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-            model_args.model_name_or_path,
-            cache_dir=training_args.cache_dir,
-            attn_implementation=attn_implementation,
-            dtype=(torch.bfloat16 if training_args.bf16 else None),
+
+        return Qwen3VLModelOutputWithPast(
+            last_hidden_state=outputs.last_hidden_state,
+            past_key_values=outputs.past_key_values,
+            rope_deltas=self.rope_deltas,
         )
-        data_args.model_type = "qwen2vl"
-        print("Qwen2VL model loaded successfully")
-
-    print(f'the initlized model is {model_args.model_name_or_path} the class is {model.__class__.__name__}')
-    print("Loading processor...")
-    processor = AutoProcessor.from_pretrained(
-        model_args.model_name_or_path,
-    )
-    print("Processor loaded successfully")
-
-    if data_args.data_flatten or data_args.data_packing:
-        print("Replacing attention class for flatten/packing mode...")
-        replace_qwen2_vl_attention_class()
-        print("Attention class replaced")
-    model.config.use_cache = False
-    print("Model cache disabled")
-
-    if training_args.gradient_checkpointing:
-        print("Setting up gradient checkpointing...")
-        if hasattr(model, "enable_input_require_grads"):
-            model.enable_input_require_grads()
-        else:
-
-            def make_inputs_require_grad(module, input, output):
-                output.requires_grad_(True)
-
-            model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
-        print("Gradient checkpointing setup complete")
-
-    print("Loading tokenizer...")
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=training_args.cache_dir,
-        model_max_length=training_args.model_max_length,
-        padding_side="right",
-        use_fast=False,
-    )
-    print("Tokenizer loaded successfully")
-    print("Setting model parameters (freezing/unfreezing layers)...")
-    set_model(model_args, model)
-    print("Model parameters set")
-
-    if torch.distributed.get_rank() == 0:
-        print("=" * 80)
-        print("TRAINABLE PARAMETERS SUMMARY")
-        print("=" * 80)
-        model.visual.print_trainable_parameters()
-        model.model.print_trainable_parameters()
-
-    print("=" * 80)
-    print("CREATING DATA MODULE")
-    print("=" * 80)
-    data_module = make_supervised_data_module(processor, data_args=data_args, model_max_length=training_args.model_max_length)
-    print("Data module created successfully")
-
-    print("=" * 80)
-    print("INITIALIZING TRAINER")
-    print("=" * 80)
-    trainer = Trainer(
-        model=model, processing_class=tokenizer, args=training_args, **data_module
-    )
-    print("Trainer initialized successfully")
-
-    print("=" * 80)
-    print("STARTING TRAINING")
-    print("=" * 80)
-    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
-        logging.info("checkpoint found, resume training")
-        print("Resuming from checkpoint...")
-        trainer.train(resume_from_checkpoint=True)
-    else:
-        print("Starting training from scratch...")
-        trainer.train()
-    print("Training completed!")
-
-    print("Saving trainer state...")
-    trainer.save_state()
-    print("Trainer state saved")
-
-    model.config.use_cache = True
-
-    print("Saving model...")
-    safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
-    print("Model saved")
-
-    print("Saving processor...")
-    processor.save_pretrained(training_args.output_dir)
-    print("Processor saved")
-    print("=" * 80)
-    print("TRAINING COMPLETE!")
-    print("=" * 80)
 
 
-if __name__ == "__main__":
-    train(attn_implementation="flash_attention_2")
+class Qwen3VLForConditionalGenerationWithDummy(Qwen3VLForConditionalGeneration):
+    """
+    Qwen3-VL for Conditional Generation with custom forward function that handles
+    dummy pixel values for mixed text-image data during training.
+
+    This class uses Qwen3VLModelWithDummy as the base model.
+    """
+
+    def __init__(self, config):
+        super().__init__(config)
+        # Replace the model with our custom version
+        self.model = Qwen3VLModelWithDummy(config)
+        # Initialize weights and apply final processing
+        self.post_init()
