@@ -9,6 +9,7 @@ class ModelArguments:
     tune_mm_llm: bool = field(default=False)
     tune_mm_mlp: bool = field(default=False)
     tune_mm_vision: bool = field(default=False)
+    use_dummy_handler: bool = field(default=False, metadata={"help": "Use WithDummy model variant for handling mixed text-image data"})
 
 @dataclass
 class DataArguments:
@@ -23,6 +24,10 @@ class DataArguments:
     video_max_pixels: int = field(default=1024 * 28 * 28)
     video_min_pixels: int = field(default=256 * 28 * 28)
     video_fps: float = 2
+    lazy_read_jsonl: bool = field(default=False)
+    prefetch_size: int = field(default=1000)
+    prefetch_cache_chunks: int = field(default=8)
+    truncate_to_max_length: bool = field(default=True)
 
 
 @dataclass
