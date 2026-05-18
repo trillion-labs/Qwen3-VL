@@ -31,10 +31,16 @@ from transformers import (
     Qwen2VLForConditionalGeneration,
     Qwen2_5_VLForConditionalGeneration,
     Qwen3VLForConditionalGeneration,
-    Qwen3VLMoeForConditionalGeneration
+    Qwen3VLMoeForConditionalGeneration,
+    Qwen3_5ForConditionalGeneration,
+    Qwen3_5MoeForConditionalGeneration,
 )
 from qwenvl.model.qwen2_5_vl import Qwen2_5_VLForConditionalGenerationWithDummy
 from qwenvl.model.qwen3_vl import Qwen3VLForConditionalGenerationWithDummy
+from qwenvl.model.qwen3_5 import (
+    Qwen3_5ForConditionalGenerationWithDummy,
+    Qwen3_5MoeForConditionalGenerationWithDummy,
+)
 from qwenvl.data.data_processor import make_supervised_data_module
 from qwenvl.train.argument import (
     ModelArguments,
@@ -66,29 +72,31 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: st
         trainer._save(output_dir, state_dict=cpu_state_dict)  # noqa
 
 
+def _get_submodules(model):
+    """Return (visual, language_model). Handles both top-level (legacy
+    transformers) and nested (.model.visual / .model.language_model) layouts
+    used by Qwen2.5-VL, Qwen3-VL, Qwen3-VL-MoE and Qwen3.5/3.6-MoE."""
+    if hasattr(model, "visual"):
+        visual = model.visual
+        language_model = getattr(model, "language_model", model.model.language_model)
+    else:
+        visual = model.model.visual
+        language_model = model.model.language_model
+    return visual, language_model
+
+
 def set_model(model_args, model):
-    if model_args.tune_mm_vision:
-        for n, p in model.visual.named_parameters():
-            p.requires_grad = True
-    else:
-        for n, p in model.visual.named_parameters():
-            p.requires_grad = False
+    visual, language_model = _get_submodules(model)
 
-    if model_args.tune_mm_mlp:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = True
-    else:
-        for n, p in model.visual.merger.named_parameters():
-            p.requires_grad = False
+    for p in visual.parameters():
+        p.requires_grad = model_args.tune_mm_vision
 
-    if model_args.tune_mm_llm:
-        for n, p in model.language_model.named_parameters():
-            p.requires_grad = True
-        model.lm_head.requires_grad = True
-    else:
-        for n, p in model.language_model.named_parameters():
-            p.requires_grad = False
-        model.lm_head.requires_grad = False
+    for p in visual.merger.parameters():
+        p.requires_grad = model_args.tune_mm_mlp
+
+    for p in language_model.parameters():
+        p.requires_grad = model_args.tune_mm_llm
+    model.lm_head.requires_grad = model_args.tune_mm_llm
 
 
 def train(attn_implementation="flash_attention_2"):
@@ -112,7 +120,52 @@ def train(attn_implementation="flash_attention_2"):
     print(f"Output directory: {training_args.output_dir}")
     print(f"Loading model from: {model_args.model_name_or_path}")
 
-    if "qwen3" in model_args.model_name_or_path.lower() and "a" in Path(model_args.model_name_or_path.rstrip("/")).name.lower():
+    path_lower = model_args.model_name_or_path.lower()
+    name_lower = Path(model_args.model_name_or_path.rstrip("/")).name.lower()
+    is_qwen3_5_family = any(tag in path_lower for tag in ("qwen3.5", "qwen3.6", "qwen3_5", "qwen3_6"))
+    is_qwen3_5_moe = is_qwen3_5_family and ("moe" in name_lower or "a3b" in name_lower or "a30b" in name_lower)
+
+    if is_qwen3_5_moe:
+        print("Detected Qwen3.5/3.6 MoE model - loading...")
+        if model_args.use_dummy_handler:
+            print("Using dummy handler version")
+            model = Qwen3_5MoeForConditionalGenerationWithDummy.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
+        else:
+            print("Using standard version")
+            model = Qwen3_5MoeForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
+        data_args.model_type = "qwen3_5vl"
+        print("Qwen3.5/3.6 MoE model loaded successfully")
+    elif is_qwen3_5_family:
+        print("Detected Qwen3.5/3.6 dense model - loading...")
+        if model_args.use_dummy_handler:
+            print("Using dummy handler version")
+            model = Qwen3_5ForConditionalGenerationWithDummy.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
+        else:
+            print("Using standard version")
+            model = Qwen3_5ForConditionalGeneration.from_pretrained(
+                model_args.model_name_or_path,
+                cache_dir=training_args.cache_dir,
+                attn_implementation=attn_implementation,
+                dtype=(torch.bfloat16 if training_args.bf16 else None),
+            )
+        data_args.model_type = "qwen3_5vl"
+        print("Qwen3.5/3.6 dense model loaded successfully")
+    elif "qwen3" in model_args.model_name_or_path.lower() and "a" in Path(model_args.model_name_or_path.rstrip("/")).name.lower():
         print("Detected Qwen3VL MoE model - loading...")
         model = Qwen3VLMoeForConditionalGeneration.from_pretrained(
             model_args.model_name_or_path,
@@ -216,8 +269,12 @@ def train(attn_implementation="flash_attention_2"):
         print("=" * 80)
         print("TRAINABLE PARAMETERS SUMMARY")
         print("=" * 80)
-        model.visual.print_trainable_parameters()
-        model.model.print_trainable_parameters()
+        visual, language_model = _get_submodules(model)
+        for name, module in [("visual", visual), ("language_model", language_model), ("full_model", model)]:
+            total = sum(p.numel() for p in module.parameters())
+            trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)
+            pct = 100 * trainable / total if total else 0.0
+            print(f"  {name:14s}: trainable {trainable:>15,} / total {total:>15,} ({pct:5.2f}%)")
 
     print("=" * 80)
     print("CREATING DATA MODULE")

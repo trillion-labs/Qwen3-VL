@@ -1232,7 +1232,13 @@ JEDI_WIDGET_CAPTIONING_QWEN3 = {
 }
 
 
+MMMU_R1 = {
+    "annotation_path": "/mnt/vast/trillion/hyungguk/Qwen3-VL/qwen-vl-finetune/data/mmmu_r1/train.jsonl",
+    "data_path": "/mnt/vast/trillion/hyungguk/Qwen3-VL/qwen-vl-finetune/data/mmmu_r1/images",
+}
+
 data_dict = {
+    "mmmu_r1": MMMU_R1,
     "android_in_the_zoo": ANDROID_IN_THE_ZOO,
     "android_control_case1": ANDROID_CONTROL_CASE1,
     "android_control_case2": ANDROID_CONTROL_CASE2,
