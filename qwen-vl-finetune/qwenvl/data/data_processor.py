@@ -234,6 +234,22 @@ def _build_messages(item: Dict[str, Any], base_path: Path) -> List[Dict[str, Any
     return messages
 
 
+def _get_turn_marker_ids(tokenizer):
+    """Return (im_start_id, assistant_id, im_end_id) for the active tokenizer.
+    Cached on the tokenizer instance so we only do the vocab lookup once."""
+    cached = getattr(tokenizer, "_qwenvl_turn_marker_ids", None)
+    if cached is not None:
+        return cached
+    im_start_id = tokenizer.convert_tokens_to_ids("<|im_start|>")
+    im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    # `assistant` may tokenize to >1 piece in some BPE merges; the turn-header is
+    # always a single-token piece in the Qwen chat template, so take the last id.
+    assistant_id = tokenizer("assistant", add_special_tokens=False).input_ids[-1]
+    cached = (im_start_id, assistant_id, im_end_id)
+    tokenizer._qwenvl_turn_marker_ids = cached
+    return cached
+
+
 def preprocess_qwen_visual(
     sources,
     processor,
@@ -254,21 +270,31 @@ def preprocess_qwen_visual(
         input_ids = torch.tensor(input_ids).unsqueeze(0)
 
     labels = torch.full_like(input_ids, IGNORE_INDEX)
+    im_start_id, assistant_id, im_end_id = _get_turn_marker_ids(processor.tokenizer)
 
     input_ids_flat = input_ids[0].tolist()
     L = len(input_ids_flat)
     pos = 0
-    while pos < L:
-        if input_ids_flat[pos] == 77091:
-            ans_start = pos + 2
+    # Match the sequence `<|im_start|> assistant` (turn header) rather than the
+    # bare `assistant` token, which can appear inside user messages as the
+    # English word.
+    while pos < L - 1:
+        if (
+            input_ids_flat[pos] == im_start_id
+            and input_ids_flat[pos + 1] == assistant_id
+        ):
+            # skip past `<|im_start|>`, `assistant`, and the trailing `\n`
+            ans_start = pos + 3
             ans_end = ans_start
-            while ans_end < L and input_ids_flat[ans_end] != 151645:
+            while ans_end < L and input_ids_flat[ans_end] != im_end_id:
                 ans_end += 1
             if ans_end < L:
+                # label the assistant content + `<|im_end|>` + the next newline
                 labels[0, ans_start : ans_end + 2] = input_ids[
                     0, ans_start : ans_end + 2
                 ]
-                pos = ans_end
+                pos = ans_end + 1
+                continue
         pos += 1
 
     full_result["labels"] = labels
@@ -297,7 +323,7 @@ class LazySupervisedDataset(Dataset):
             data_args, "video_min_total_pixels", 256 * 28 * 28
         )
         self.model_type = data_args.model_type
-        if data_args.model_type == "qwen3vl":
+        if data_args.model_type in ("qwen3vl", "qwen3_5vl"):
             self.get_rope_index = get_rope_index_3
         elif data_args.model_type == "qwen2.5vl":
             self.get_rope_index = get_rope_index_25
